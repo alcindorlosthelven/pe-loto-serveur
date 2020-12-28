@@ -1,0 +1,25 @@
+{
+
+  "name": "los/pe-loto-serveur",
+  "authors": [
+    {
+      "name": "alcindor losthelven",
+      "email": "alcindorlos@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "": ""
+    },
+    "psr-0": {
+      "": ""
+    }
+  },
+  "require": {
+    "ext-pdo": "*",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ixudra/curl": "6.*",
+    "ext-ctype": "*"
+  }
+}
