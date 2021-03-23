@@ -1,0 +1,277 @@
+{
+  "client": [
+    {
+      "id": "14",
+      "nom": "default",
+      "prenom": "client",
+      "sexe": "masculin",
+      "telephone": "all",
+      "pseudo": "c-aall",
+      "password": "a181a603769c1f98ad927e7367c7aa51",
+      "connect": "non",
+      "objet": "client"
+    }
+  ],
+  "code_jeux": [
+    {
+      "id": "63",
+      "code": "20",
+      "description": "Borlette"
+    },
+    {
+      "id": "64",
+      "code": "30",
+      "description": "Loto 3"
+    },
+    {
+      "id": "65",
+      "code": "40",
+      "description": "Mariage"
+    },
+    {
+      "id": "66",
+      "code": "41",
+      "description": "Loto 4 Option 1"
+    },
+    {
+      "id": "67",
+      "code": "42",
+      "description": "Loto 4 Option 2"
+    },
+    {
+      "id": "68",
+      "code": "43",
+      "description": "Loto 4 Option 3"
+    },
+    {
+      "id": "69",
+      "code": "49",
+      "description": "Loto 4 Option toutes les options (1,2,3)"
+    },
+    {
+      "id": "70",
+      "code": "51",
+      "description": "Loto 5 option 1"
+    },
+    {
+      "id": "71",
+      "code": "52",
+      "description": "Loto 5 option 2"
+    },
+    {
+      "id": "72",
+      "code": "53",
+      "description": "Loto 5 option 3"
+    },
+    {
+      "id": "73",
+      "code": "59",
+      "description": "Loto 5 Toutes les options(1,2,3)"
+    }
+  ],
+  "configuration": [
+    {
+      "id": "1",
+      "nom": "licence_email",
+      "valeur": "los-framework@gmail.com",
+      "categorie": "non_modifiable"
+    },
+    {
+      "id": "2",
+      "nom": "licence_code",
+      "valeur": "53-240-936-26",
+      "categorie": "non_modifiable"
+    },
+    {
+      "id": "3",
+      "nom": "licence_url",
+      "valeur": "http:\/\/licence-serveur-sge.bioshaiti.com\/licence-serveur-sge",
+      "categorie": "text"
+    },
+    {
+      "id": "4",
+      "nom": "taxe",
+      "valeur": "10",
+      "categorie": "text"
+    }
+  ],
+  "tirage": [
+    {
+      "id": "1",
+      "tirage": "midi",
+      "statut": "en cours"
+    },
+    {
+      "id": "2",
+      "tirage": "soir",
+      "statut": "en cours"
+    },
+    {
+      "id": "3",
+      "tirage": "matin",
+      "statut": "en cours"
+    }
+  ],
+  "utilisateur": [
+    {
+      "id": "6",
+      "nom": "alcindor",
+      "prenom": "losthelven",
+      "pseudo": "admin",
+      "password": "21232f297a57a5a743894a0e4a801fc3",
+      "role": "admin",
+      "objet": "utilisateur",
+      "connect": "oui"
+    }
+  ],
+  "vendeur": [
+    {
+      "id": "6",
+      "nom": "alcindor",
+      "prenom": "losthelven",
+      "sexe": "masculin",
+      "telephone": "37391567",
+      "pseudo": "v-alosthelven",
+      "password": "d4748ddc1eb78bab20009a7759ff2cf6",
+      "connect": "oui",
+      "objet": "vendeur"
+    }
+  ],
+  "vente": [
+    {
+      "id": "40",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"40:Mariage\",\"pari\":1254,\"mise\":50},{\"codeJeux\":\"20:Borlette\",\"pari\":10,\"mise\":100},{\"codeJeux\":\"53:Loto 5 option 3\",\"pari\":10254,\"mise\":500}]",
+      "tirage": "midi",
+      "no_ticket": "561-38-1874",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "857-38-18623",
+      "serial": "n\/a",
+      "date": "2021-02-15",
+      "heure": "12:38:18",
+      "eliminer": "non"
+    },
+    {
+      "id": "41",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"53:Loto 5 option 3\",\"pari\":54634,\"mise\":100},{\"codeJeux\":\"51:Loto 5 option 1\",\"pari\":54365,\"mise\":300},{\"codeJeux\":\"40:Mariage\",\"pari\":4465,\"mise\":100},{\"codeJeux\":\"40:Mariage\",\"pari\":4354,\"mise\":2354}]",
+      "tirage": "midi",
+      "no_ticket": "729-39-381279",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "863-39-38109",
+      "serial": "n\/a",
+      "date": "2021-02-15",
+      "heure": "12:39:38",
+      "eliminer": "non"
+    },
+    {
+      "id": "42",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"30:Loto 3\",\"pari\":12,\"mise\":32},{\"codeJeux\":\"52:Loto 5 option 2\",\"pari\":43542,\"mise\":543},{\"codeJeux\":\"30:Loto 3\",\"pari\":432,\"mise\":32},{\"codeJeux\":\"53:Loto 5 option 3\",\"pari\":4354,\"mise\":2432}]",
+      "tirage": "midi",
+      "no_ticket": "589-45-501855",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "145-45-501260",
+      "serial": "n\/a",
+      "date": "2021-02-18",
+      "heure": "12:45:50",
+      "eliminer": "non"
+    },
+    {
+      "id": "43",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"53:Loto 5 option 3\",\"pari\":54543,\"mise\":500},{\"codeJeux\":\"30:Loto 3\",\"pari\":125,\"mise\":100}]",
+      "tirage": "soir",
+      "no_ticket": "442-55-441896",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "896-55-44413",
+      "serial": "n\/a",
+      "date": "2021-02-18",
+      "heure": "12:55:44",
+      "eliminer": "non"
+    },
+    {
+      "id": "44",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"40:Mariage\",\"pari\":125,\"mise\":45},{\"codeJeux\":\"20:Borlette\",\"pari\":12,\"mise\":45},{\"codeJeux\":\"41:Loto 4 Option 1\",\"pari\":1245,\"mise\":500}]",
+      "tirage": "matin",
+      "no_ticket": "776-58-271052",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "947-58-271861",
+      "serial": "n\/a",
+      "date": "2021-02-18",
+      "heure": "12:58:27",
+      "eliminer": "non"
+    },
+    {
+      "id": "45",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"59:Loto 5 Toutes les options(1,2,3)\",\"pari\":54345,\"mise\":32},{\"codeJeux\":\"40:Mariage\",\"pari\":4354,\"mise\":34}]",
+      "tirage": "soir",
+      "no_ticket": "21-4-341221",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "530-4-341239",
+      "serial": "n\/a",
+      "date": "2021-02-18",
+      "heure": "18:04:34",
+      "eliminer": "non"
+    },
+    {
+      "id": "46",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"49:Loto 4 Option toutes les options (1,2,3)\",\"pari\":4332,\"mise\":54}]",
+      "tirage": "midi",
+      "no_ticket": "526-43-12296",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "280-43-128",
+      "serial": "n\/a",
+      "date": "2021-02-19",
+      "heure": "15:43:12",
+      "eliminer": "non"
+    },
+    {
+      "id": "47",
+      "id_vendeur": "6",
+      "id_client": "14",
+      "paris": "[{\"codeJeux\":\"51:Loto 5 option 1\",\"pari\":54,\"mise\":23},{\"codeJeux\":\"42:Loto 4 Option 2\",\"pari\":54,\"mise\":23},{\"codeJeux\":\"42:Loto 4 Option 2\",\"pari\":54,\"mise\":23},{\"codeJeux\":\"42:Loto 4 Option 2\",\"pari\":4353,\"mise\":5434}]",
+      "tirage": "midi",
+      "no_ticket": "844-45-21422",
+      "ref_pos": "n\/a",
+      "tid": "n\/a",
+      "sequence": "331-45-2767",
+      "serial": "n\/a",
+      "date": "2021-02-22",
+      "heure": "12:45:02",
+      "eliminer": "non"
+    }
+  ],
+  "vente_eliminer": [
+    {
+      "id": "8",
+      "id_vente": "40",
+      "motif": "motif quelqu'onque",
+      "status": "en cours"
+    },
+    {
+      "id": "12",
+      "id_vente": "45",
+      "motif": "blablabla",
+      "status": "en cours"
+    }
+  ],
+  "statut": "success"
+}

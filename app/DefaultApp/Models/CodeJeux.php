@@ -9,7 +9,7 @@ use systeme\Model\Model;
 class CodeJeux extends Model
 {
     protected $table="code_jeux";
-    public $id,$code;
+    public $id,$code,$description;
     /**
      * @return mixed
      */
@@ -41,6 +41,24 @@ class CodeJeux extends Model
     {
         $this->code = $code;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param mixed $description
+     */
+    public function setDescription($description): void
+    {
+        $this->description = $description;
+    }
+
+
 
     public function findByCode($code){
         $con=self::connection();

@@ -4,11 +4,10 @@
 namespace app\DefaultApp\Controlleurs;
 
 
-use app\DefaultApp\Models\CodeJeux;
+use app\DefaultApp\Models\Tirage;
 use systeme\Controlleur\Controlleur;
-use systeme\Model\Model;
 
-class CodeJeuxControlleur extends Controlleur
+class TirageControlleur extends Controlleur
 {
     public function add(){
         try{
@@ -19,27 +18,21 @@ class CodeJeuxControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->code)){
+            if(empty($data->tirage)){
                 http_response_code(503);
-                echo json_encode(array("message" => "code invalide"));
+                echo json_encode(array("message" => "tirage invalide"));
                 return;
             }
 
-            if(empty($data->description)){
-                http_response_code(503);
-                echo json_encode(array("message" => "description invalide"));
-                return;
-            }
-
-
-            $codeJeux=new CodeJeux();
-            $codeJeux->remplire((array)$data);
-            $m=$codeJeux->add();
+            $obj=new Tirage();
+            $obj->remplire((array)$data);
+            $obj->setStatut("n/a");
+            $m=$obj->add();
             if($m=="ok"){
-                $codeJeux=$codeJeux->lastObjet();
-                $codeJeux=$codeJeux->toJson();
+                $obj=$obj->lastObjet();
+                $obj=$obj->toJson();
                 http_response_code(200);
-                echo $codeJeux;
+                echo $obj;
                 return;
             }
             http_response_code(503);
@@ -66,33 +59,33 @@ class CodeJeuxControlleur extends Controlleur
             return;
         }
 
-        if(empty($data->code)){
+        if(empty($data->tirage)){
             http_response_code(503);
-            echo json_encode(array("message" => "code invalide"));
+            echo json_encode(array("message" => "tirage invalide"));
             return;
         }
 
-        if(empty($data->description)){
+        if(empty($data->statut)){
             http_response_code(503);
-            echo json_encode(array("message" => "description invalide"));
+            echo json_encode(array("message" => "statut invalide"));
             return;
         }
 
-        $codeJeux=new CodeJeux();
-        $codeJeux = $codeJeux->findById($data->id);
+        $obj=new Tirage();
+        $obj = $obj->findById($data->id);
 
-        if ($codeJeux == null) {
+        if ($obj == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}"));
             return;
         }
 
-        $codeJeux->remplire((array)$data);
-        $m=$codeJeux->update();
+        $obj->remplire((array)$data);
+        $m=$obj->update();
         if($m==="ok"){
-            $codeJeux=json_encode($codeJeux);
+            $obj=json_encode($obj);
             http_response_code(200);
-            echo $codeJeux;
+            echo $obj;
             return;
         }
 
@@ -112,17 +105,17 @@ class CodeJeuxControlleur extends Controlleur
             return;
         }
 
-        $codeJeux=new CodeJeux();
-        $codeJeux=$codeJeux->findById($id);
+        $obj=new Tirage();
+        $obj=$obj->findById($id);
 
-        if ($codeJeux == null) {
+        if ($obj == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
         }
         http_response_code(200);
-        $codeJeux=json_encode($codeJeux);
-        echo $codeJeux;
+        $obj=json_encode($obj);
+        echo $obj;
     }
 
     public function gets(){
@@ -132,13 +125,23 @@ class CodeJeuxControlleur extends Controlleur
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
 
-        $codeJeux=new CodeJeux();
-        $liste=$codeJeux->findAll();
-        http_response_code(200);
-        $codeJeux=json_encode($liste);
-        echo $codeJeux;
-    }
 
+        $obj=new Tirage();
+        if(isset($_GET['encours'])){
+            $liste=$obj->listeEncours();
+            if(count($liste)>0){
+                $obj=$liste[0];
+                http_response_code(200);
+                echo json_encode($obj);
+            }
+        }else{
+            $liste=$obj->findAll();
+            http_response_code(200);
+            $obj=json_encode($liste);
+            echo $obj;
+        }
+
+    }
     public function delete($id){
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
@@ -151,7 +154,7 @@ class CodeJeuxControlleur extends Controlleur
             return;
         }
 
-        $obj=new CodeJeux();
+        $obj=new Tirage();
         $obj=$obj->findById($id);
 
         if ($obj == null) {
@@ -171,5 +174,4 @@ class CodeJeuxControlleur extends Controlleur
         echo json_encode(array("message" => $m));
 
     }
-
 }

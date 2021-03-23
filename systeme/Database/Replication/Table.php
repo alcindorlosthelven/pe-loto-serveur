@@ -40,11 +40,10 @@ class Table extends Model
     {
         $listeTable = array();
         try {
-
             $con = self::connection();
             $req = "show tables";
             $res = $con->query($req);
-            $data = $res->fetchAll(\PDO::FETCH_CLASS, "systeme\\Database\\Replication\\Table");
+            $data = $res->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             foreach ($data as $tb){
                 $table = new Table();
                 $v="Tables_in_".self::$nom_base;

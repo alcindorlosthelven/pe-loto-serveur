@@ -4,11 +4,11 @@
 namespace app\DefaultApp\Controlleurs;
 
 
-use app\DefaultApp\Models\CodeJeux;
+use app\DefaultApp\Models\Banque;
 use systeme\Controlleur\Controlleur;
 use systeme\Model\Model;
 
-class CodeJeuxControlleur extends Controlleur
+class BanqueControlleur extends Controlleur
 {
     public function add(){
         try{
@@ -19,27 +19,33 @@ class CodeJeuxControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->code)){
+            if(empty($data->banque)){
                 http_response_code(503);
-                echo json_encode(array("message" => "code invalide"));
+                echo json_encode(array("message" => "banque inccorect"));
                 return;
             }
 
-            if(empty($data->description)){
+            if(empty($data->latitude)){
                 http_response_code(503);
-                echo json_encode(array("message" => "description invalide"));
+                echo json_encode(array("message" => "latitude invalide"));
+                return;
+            }
+
+            if(empty($data->longitude)){
+                http_response_code(503);
+                echo json_encode(array("message" => "longitude invalide"));
                 return;
             }
 
 
-            $codeJeux=new CodeJeux();
-            $codeJeux->remplire((array)$data);
-            $m=$codeJeux->add();
+            $banque=new Banque();
+            $banque->remplire((array)$data);
+            $m=$banque->add();
             if($m=="ok"){
-                $codeJeux=$codeJeux->lastObjet();
-                $codeJeux=$codeJeux->toJson();
-                http_response_code(200);
-                echo $codeJeux;
+                $banque=$banque->lastObjet();
+                $banque=$banque->toJson();
+                http_response_code(201);
+                echo $banque;
                 return;
             }
             http_response_code(503);
@@ -66,36 +72,42 @@ class CodeJeuxControlleur extends Controlleur
             return;
         }
 
-        if(empty($data->code)){
+        if(empty($data->banque)){
             http_response_code(503);
-            echo json_encode(array("message" => "code invalide"));
+            echo json_encode(array("message" => "banque inccorect"));
             return;
         }
 
-        if(empty($data->description)){
+        if(empty($data->latitude)){
             http_response_code(503);
-            echo json_encode(array("message" => "description invalide"));
+            echo json_encode(array("message" => "latitude invalide"));
             return;
         }
 
-        $codeJeux=new CodeJeux();
-        $codeJeux = $codeJeux->findById($data->id);
+        if(empty($data->longitude)){
+            http_response_code(503);
+            echo json_encode(array("message" => "longitude invalide"));
+            return;
+        }
 
-        if ($codeJeux == null) {
+
+        $banque=new Banque();
+        $banque = $banque->findById($data->id);
+
+        if ($banque == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}"));
             return;
         }
 
-        $codeJeux->remplire((array)$data);
-        $m=$codeJeux->update();
+        $banque->remplire((array)$data);
+        $m=$banque->update();
         if($m==="ok"){
-            $codeJeux=json_encode($codeJeux);
+            $banque=json_encode($banque);
             http_response_code(200);
-            echo $codeJeux;
+            echo $banque;
             return;
         }
-
         http_response_code(503);
         echo json_encode(array("message" => $m));
     }
@@ -106,23 +118,24 @@ class CodeJeuxControlleur extends Controlleur
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
+
         if(empty($id)){
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
             return;
         }
 
-        $codeJeux=new CodeJeux();
-        $codeJeux=$codeJeux->findById($id);
+        $banque=new Banque();
+        $banque=$banque->findById($id);
 
-        if ($codeJeux == null) {
+        if ($banque == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
         }
         http_response_code(200);
-        $codeJeux=json_encode($codeJeux);
-        echo $codeJeux;
+        $banque=json_encode($banque);
+        echo $banque;
     }
 
     public function gets(){
@@ -131,12 +144,11 @@ class CodeJeuxControlleur extends Controlleur
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-
-        $codeJeux=new CodeJeux();
-        $liste=$codeJeux->findAll();
+        $banque=new Banque();
+        $liste=$banque->findAll();
         http_response_code(200);
-        $codeJeux=json_encode($liste);
-        echo $codeJeux;
+        $pos=json_encode($liste);
+        echo $pos;
     }
 
     public function delete($id){
@@ -145,13 +157,14 @@ class CodeJeuxControlleur extends Controlleur
         header("Access-Control-Allow-Methods: DELETE");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
+
         if(empty($id)){
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
             return;
         }
 
-        $obj=new CodeJeux();
+        $obj=new Banque();
         $obj=$obj->findById($id);
 
         if ($obj == null) {
@@ -171,5 +184,4 @@ class CodeJeuxControlleur extends Controlleur
         echo json_encode(array("message" => $m));
 
     }
-
 }

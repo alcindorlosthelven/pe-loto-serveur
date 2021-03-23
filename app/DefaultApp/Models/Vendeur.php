@@ -8,7 +8,79 @@ use systeme\Model\Model;
 
 class Vendeur extends Model
 {
-    public $id,$nom,$prenom,$telephone,$sexe;
+    public $id,$nom,$prenom,$telephone,$sexe,$objet,$pseudo,$password,$connect;
+
+    public function __construct($objet="vendeur")
+    {
+        $this->objet=$objet;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPseudo()
+    {
+        return $this->pseudo;
+    }
+
+    /**
+     * @param mixed $pseudo
+     */
+    public function setPseudo($pseudo): void
+    {
+        $this->pseudo = $pseudo;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+    /**
+     * @param mixed $password
+     */
+    public function setPassword($password): void
+    {
+        $this->password = $password;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getConnect()
+    {
+        return $this->connect;
+    }
+
+    /**
+     * @param mixed $connect
+     */
+    public function setConnect($connect): void
+    {
+        $this->connect = $connect;
+    }
+
+
+    /**
+     * @return mixed|string
+     */
+    public function getObjet(): mixed
+    {
+        return $this->objet;
+    }
+
+    /**
+     * @param mixed|string $objet
+     */
+    public function setObjet(mixed $objet): void
+    {
+        $this->objet = $objet;
+    }
+
+
 
     /**
      * @return mixed
@@ -99,6 +171,61 @@ class Vendeur extends Model
             return true;
         }
         return  false;
+    }
+
+    public static function setConnection($id)
+    {
+        try {
+            $id_session = md5(sha1(uniqid('', true)));
+            $con = self::connection();
+            $req = "UPDATE vendeur SET connect=:connect WHERE id=:id";
+            $stmt = $con->prepare($req);
+            if ($stmt->execute(array(
+                ":connect" => "oui",
+                ":id"=>$id
+            ))
+            ) {
+                $_SESSION['id_session'] = $id_session;
+                return "ok";
+            } else {
+                return "no";
+            }
+        } catch (\Exception $ex) {
+            throw new \Exception($ex->getMessage());
+        }
+    }
+
+    public static function login($user_name,$password)
+    {
+        $password=md5($password);
+        try {
+            $con = self::connection();
+            $req = "SELECT *FROM vendeur WHERE pseudo=:pseudo AND password=:password";
+            $stmt = $con->prepare($req);
+            $stmt->execute(array(
+                ":pseudo" => $user_name,
+                ":password" => $password
+            ));
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+            if (count($data) > 0) {
+                self::setConnection($data[0]->getId());
+                $data[0]->setConnect("oui");
+                return $data[0];
+            } else {
+                return "no";
+            }
+        } catch (\Exception $ex) {
+            throw new \Exception($ex->getMessage());
+        }
+
+    }
+
+    public function total(){
+        $con=self::connection();
+        $req="select *from vendeur";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        return $stmt->rowCount();
     }
 
 }

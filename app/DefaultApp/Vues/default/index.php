@@ -1,1 +1,6 @@
-<center><h1>Pe lotto Serveur</h1></center>
+
+<?php
+echo "Pe lotto serveur";
+return ;
+echo \app\DefaultApp\Models\Replication\Replication::getDonneeToJson();
+

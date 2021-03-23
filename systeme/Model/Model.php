@@ -372,9 +372,6 @@ class Model extends Session
 
                 }else {
                     $value = trim(addslashes(strip_tags($data[$name])));
-                    if ($name == "password") {
-                        $value = sha1(md5($value));
-                    }
                     if ($value == "") {
                         $value = "n/a";
                     }

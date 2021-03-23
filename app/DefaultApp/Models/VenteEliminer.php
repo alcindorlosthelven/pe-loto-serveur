@@ -75,4 +75,45 @@ class VenteEliminer extends Model
         $this->status = $status;
     }
 
+    public static function existe($id_vente){
+        $con=self::connection();
+        $req="select *from vente_eliminer where id_vente=:id_vente";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(":id_vente"=>$id_vente));
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    public function add(){
+        if(self::existe($this->id_vente)){
+            return "Fiche en cours d'élimination";
+        }
+        return parent::add();
+    }
+
+    public static function rechercheParIdVente($id_vente){
+        $con=self::connection();
+        $req="select *from vente_eliminer where id_vente=:id_vente";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(":id_vente"=>$id_vente));
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return $data[0];
+        }else{
+           return null;
+        }
+    }
+
+    public function total(){
+        $con=self::connection();
+        $req="select *from vente_eliminer where status='terminer'";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+
 }

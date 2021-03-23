@@ -4,10 +4,10 @@
 namespace app\DefaultApp\Controlleurs;
 
 
-use app\DefaultApp\Models\Vendeur;
+use app\DefaultApp\Models\Utilisateur;
 use systeme\Controlleur\Controlleur;
 
-class VendeurControlleur extends Controlleur
+class UtilisateurControlleur extends Controlleur
 {
     public function add(){
         try{
@@ -26,36 +26,34 @@ class VendeurControlleur extends Controlleur
 
             if(empty($data->prenom)){
                 http_response_code(503);
-                echo json_encode(array("message" => "prénom invalide"));
+                echo json_encode(array("message" => "prenom invalide"));
                 return;
             }
 
-            if(empty($data->sexe)){
+            if(empty($data->pseudo)){
                 http_response_code(503);
-                echo json_encode(array("message" => "sexe invalide"));
+                echo json_encode(array("message" => "pseudo invalide"));
                 return;
             }
 
-            if(empty($data->telephone)){
+            if(empty($data->password)){
                 http_response_code(503);
-                echo json_encode(array("message" => "telephone invalide"));
+                echo json_encode(array("message" => "password invalide"));
                 return;
             }
 
-            $pseudo="v-".substr($data->nom,0,1).$data->prenom;
-            $password=md5($data->telephone);
-            $connect = "non";
+            if(empty($data->role)){
+                http_response_code(503);
+                echo json_encode(array("message" => "role invalide"));
+                return;
+            }
 
-            $obj=new Vendeur();
+            $obj=new Utilisateur();
             $obj->remplire((array)$data);
-            $obj->setPseudo($pseudo);
-            $obj->setPassword($password);
-            $obj->setConnect($connect);
-
+            $obj->setPassword(md5($data->password));
             $m=$obj->add();
             if($m=="ok"){
                 $obj=$obj->lastObjet();
-                $obj->message="enregistrer avec success";
                 $obj=$obj->toJson();
                 http_response_code(200);
                 echo $obj;
@@ -71,70 +69,72 @@ class VendeurControlleur extends Controlleur
     }
 
     public function update(){
-        try{
-            header("Access-Control-Allow-Origin: *");
-            header("Content-Type: application/json; charset=UTF-8");
-            header("Access-Control-Allow-Methods: PUT");
-            header("Access-Control-Max-Age: 3600");
-            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+        header("Access-Control-Allow-Origin: *");
+        header("Content-Type: application/json; charset=UTF-8");
+        header("Access-Control-Allow-Methods: PUT");
+        header("Access-Control-Max-Age: 3600");
+        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 
-            $data = json_decode(file_get_contents("php://input"));
+        $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->id)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id invalide"));
-                return;
-            }
-
-            if(empty($data->nom)){
-                http_response_code(503);
-                echo json_encode(array("message" => "nom invalide"));
-                return;
-            }
-
-            if(empty($data->prenom)){
-                http_response_code(503);
-                echo json_encode(array("message" => "prénom invalide"));
-                return;
-            }
-
-            if(empty($data->sexe)){
-                http_response_code(503);
-                echo json_encode(array("message" => "sexe invalide"));
-                return;
-            }
-
-            if(empty($data->telephone)){
-                http_response_code(503);
-                echo json_encode(array("message" => "telephone invalide"));
-                return;
-            }
-
-            $obj=new Vendeur();
-            $obj = $obj->findById($data->id);
-            if ($obj == null) {
-                http_response_code(404);
-                echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}","status"=>503));
-                return;
-            }
-
-            $obj->remplire((array)$data);
-            $m=$obj->update();
-            if($m==="ok"){
-                $obj->message="modifer avec success";
-                $obj=json_encode($obj);
-                http_response_code(200);
-                echo $obj;
-                return;
-            }
-
+        if(empty($data->id)){
             http_response_code(503);
-            echo json_encode(array("message" => $m));
-        }catch (\Exception $ex){
-            http_response_code(503);
-            echo json_encode(array("message" => $ex->getMessage()));
+            echo json_encode(array("message" => "id invalide"));
+            return;
         }
 
+        if(empty($data->nom)){
+            http_response_code(503);
+            echo json_encode(array("message" => "nom invalide"));
+            return;
+        }
+
+        if(empty($data->prenom)){
+            http_response_code(503);
+            echo json_encode(array("message" => "prenom invalide"));
+            return;
+        }
+
+        if(empty($data->pseudo)){
+            http_response_code(503);
+            echo json_encode(array("message" => "pseudo invalide"));
+            return;
+        }
+
+        if(empty($data->password)){
+            http_response_code(503);
+            echo json_encode(array("message" => "password invalide"));
+            return;
+        }
+
+        if(empty($data->role)){
+            http_response_code(503);
+            echo json_encode(array("message" => "role invalide"));
+            return;
+        }
+
+
+        $obj=new Utilisateur();
+        $obj = $obj->findById($data->id);
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}"));
+            return;
+        }
+
+        $obj->remplire((array)$data);
+        $obj->setPassword(md5($data->password));
+
+        $m=$obj->update();
+        if($m==="ok"){
+            $obj=json_encode($obj);
+            http_response_code(200);
+            echo $obj;
+            return;
+        }
+
+        http_response_code(503);
+        echo json_encode(array("message" => $m));
     }
 
     public function get($id){
@@ -149,10 +149,10 @@ class VendeurControlleur extends Controlleur
             return;
         }
 
-        $obj=new Vendeur();
+        $obj=new Utilisateur();
         $obj=$obj->findById($id);
 
-        if ($obj== null) {
+        if ($obj == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
@@ -169,7 +169,7 @@ class VendeurControlleur extends Controlleur
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
 
-        $obj=new Vendeur();
+        $obj=new Utilisateur();
         $liste=$obj->findAll();
         http_response_code(200);
         $obj=json_encode($liste);
@@ -188,7 +188,7 @@ class VendeurControlleur extends Controlleur
             return;
         }
 
-        $obj=new Vendeur();
+        $obj=new Utilisateur();
         $obj=$obj->findById($id);
 
         if ($obj == null) {
@@ -215,11 +215,11 @@ class VendeurControlleur extends Controlleur
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-        $v=new Vendeur();
+        $v=new Utilisateur();
         $obj=$v->total();
         http_response_code(200);
         $obj = json_encode($obj);
         echo $obj;
     }
-}
 
+}

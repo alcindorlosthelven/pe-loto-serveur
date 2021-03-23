@@ -43,8 +43,17 @@ class ClientControlleur extends Controlleur
                 return;
             }
 
+            $pseudo="c-".substr($data->nom,0,1).$data->prenom;
+            $password=md5($data->telephone);
+            $connect = "non";
+
+
             $obj=new Client();
             $obj->remplire((array)$data);
+            $obj->setPseudo($pseudo);
+            $obj->setPassword($password);
+            $obj->setConnect($connect);
+
             $m=$obj->add();
             if($m=="ok"){
                 $obj=$obj->lastObjet();
@@ -166,6 +175,71 @@ class ClientControlleur extends Controlleur
         $liste=$obj->findAll();
         http_response_code(200);
         $obj=json_encode($liste);
+        echo $obj;
+    }
+
+    public function delete($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: DELETE");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        if(empty($id)){
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj=new Client();
+        $obj=$obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $m=$obj->deleteById($id);
+        if($m){
+            http_response_code(200);
+            echo json_encode(array("message"=>"supprimer avec success"));
+            return;
+        }
+
+        http_response_code(503);
+        echo json_encode(array("message" => $m));
+
+    }
+
+    public function getDefaultClient(){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $obj=new Client();
+        $obj=$obj->getDefaultClient();
+        if ($obj== null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Client par defaut non trouver dans la base de donnee"));
+            return;
+        }
+        http_response_code(200);
+        $obj=json_encode($obj);
+        echo $obj;
+    }
+
+    public function total(){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        $v=new Client();
+        $obj=$v->total();
+        http_response_code(200);
+        $obj = json_encode($obj);
         echo $obj;
     }
 
