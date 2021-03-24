@@ -3,15 +3,10 @@
 
 namespace app\DefaultApp\Controlleurs;
 
-
-use app\DefaultApp\Models\Banque;
-use app\DefaultApp\Models\Branche;
 use app\DefaultApp\Models\Departement;
-use app\DefaultApp\Models\Pos;
-use app\DefaultApp\Models\Utilisateur;
 use systeme\Controlleur\Controlleur;
 
-class PosControlleur extends Controlleur
+class DepartementControlleur extends Controlleur
 {
     public function add(){
         try{
@@ -22,46 +17,20 @@ class PosControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->id_departement)){
+            if(empty($data->departement)){
                 http_response_code(503);
-                echo json_encode(array("message" => "id departement inccorect"));
+                echo json_encode(array("message" => "departement invalide"));
                 return;
             }
 
-            if(empty($data->id_superviseur)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id supperviseur invalide"));
-                return;
-            }
-
-            if(empty($data->id_banque)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id banque invalide"));
-                return;
-            }
-
-            if(empty($data->id_branche)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id branche invalide"));
-                return;
-            }
-
-            if(empty($data->imei)){
-                http_response_code(503);
-                echo json_encode(array("message" => "imei invalide"));
-                return;
-            }
-
-
-            $pos=new Pos();
-            $pos->remplire((array)$data);
-            $pos->statut="desactiver";
-            $m=$pos->add();
+            $ob=new Departement();
+            $ob->remplire((array)$data);
+            $m=$ob->add();
             if($m=="ok"){
-                $pos=$pos->lastObjet();
-                $pos=$pos->toJson();
-                http_response_code(201);
-                echo $pos;
+                $ob=$ob->lastObjet();
+                $ob=$ob->toJson();
+                http_response_code(200);
+                echo $ob;
                 return;
             }
             http_response_code(503);
@@ -88,53 +57,31 @@ class PosControlleur extends Controlleur
             return;
         }
 
-        if(empty($data->id_departement)){
+        if(empty($data->departement)){
             http_response_code(503);
-            echo json_encode(array("message" => "id departement inccorect"));
+            echo json_encode(array("message" => "departement invalide"));
             return;
         }
 
-        if(empty($data->id_superviseur)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id supperviseur invalide"));
-            return;
-        }
 
-        if(empty($data->id_banque)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id banque invalide"));
-            return;
-        }
+        $ob=new Departement();
+        $ob = $ob->findById($data->id);
 
-        if(empty($data->id_branche)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id branche invalide"));
-            return;
-        }
-
-        if(empty($data->imei)){
-            http_response_code(503);
-            echo json_encode(array("message" => "imei invalide"));
-            return;
-        }
-
-        $pos=new Pos();
-        $pos = $pos->findById($data->id);
-
-        if ($pos == null) {
+        if ($ob == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}"));
             return;
         }
 
-        $pos->remplire((array)$data);
-        $m=$pos->update();
+        $ob->remplire((array)$data);
+        $m=$ob->update();
         if($m==="ok"){
-            $pos=json_encode($pos);
+            $ob=json_encode($ob);
             http_response_code(200);
-            echo $pos;
+            echo $ob;
             return;
         }
+
         http_response_code(503);
         echo json_encode(array("message" => $m));
     }
@@ -145,24 +92,23 @@ class PosControlleur extends Controlleur
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-
         if(empty($id)){
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
             return;
         }
 
-        $pos=new Pos();
-        $pos=$pos->findById($id);
+        $ob=new Departement();
+        $ob=$ob->findById($id);
 
-        if ($pos == null) {
+        if ($ob == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
         }
         http_response_code(200);
-        $pos=json_encode($pos);
-        echo $pos;
+        $ob=json_encode($ob);
+        echo $ob;
     }
 
     public function gets(){
@@ -171,29 +117,12 @@ class PosControlleur extends Controlleur
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-        $pos=new Pos();
-        $liste=$pos->findAll();
-        $b=new Banque();
-        $d=new Departement();
-        $br=new Branche();
-        $su=new Utilisateur();
-        foreach($liste as $i=>$value){
-            $id_departement=$value->id_departement;
-            $id_superviseur=$value->id_superviseur;
-            $id_branch=$value->id_branche;
-            $id_banque=$value->id_banque;
-            $b=$b->findById($id_banque);
-            $br=$br->findById($id_branch);
-            $su=$su->findById($id_superviseur);
-            $d=$d->findById($id_departement);
-            $liste[$i]->departement=$d;
-            $liste[$i]->superviseur=$su;
-            $liste[$i]->branche=$br;
-            $liste[$i]->banque=$b;
-        }
+
+        $ob=new Departement();
+        $liste=$ob->findAll();
         http_response_code(200);
-        $pos=json_encode($liste);
-        echo $pos;
+        $ob=json_encode($liste);
+        echo $ob;
     }
 
     public function delete($id){
@@ -209,7 +138,7 @@ class PosControlleur extends Controlleur
             return;
         }
 
-        $obj=new Pos();
+        $obj=new Departement();
         $obj=$obj->findById($id);
 
         if ($obj == null) {

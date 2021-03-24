@@ -176,6 +176,19 @@ class UtilisateurControlleur extends Controlleur
         echo $obj;
     }
 
+    public function getsSuperviseur(){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        $obj=new Utilisateur();
+        $liste=$obj->listeSuperviseur();
+        http_response_code(200);
+        $obj=json_encode($liste);
+        echo $obj;
+    }
+
     public function delete($id){
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");

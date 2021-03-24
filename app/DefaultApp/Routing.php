@@ -74,6 +74,7 @@ App::get("utilisateur/:id","utilisateur.get")->avec("id","[0-9]+");
 App::get("utilisateur","utilisateur.gets");
 App::delete("utilisateur/:id","utilisateur.delete")->avec("id","[0-9]+");
 App::get("utilisateur/total","utilisateur.total");
+App::get("utilisateur/superviseur","utilisateur.getsSuperviseur");
 //fin Tirage
 
 //lot gagnants
@@ -118,6 +119,14 @@ App::get("lotterie/:id","lotterie.get")->avec("id","[0-9]+");
 App::get("lotterie","lotterie.gets");
 App::delete("lotterie/:id","lotterie.delete")->avec("id","[0-9]+");
 //lotterie
+
+//departement
+App::post("departement","departement.add");
+App::put("departement","departement.update");
+App::get("departement/:id","departement.get")->avec("id","[0-9]+");
+App::get("departement","departement.gets");
+App::delete("departement/:id","departement.delete")->avec("id","[0-9]+");
+//departement
 
 
 

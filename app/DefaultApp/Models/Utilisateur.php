@@ -200,4 +200,12 @@ class Utilisateur extends Model
         $stmt->execute();
         return $stmt->rowCount();
     }
+
+    public function listeSuperviseur(){
+        $con=self::connection();
+        $req="select *from utilisateur where role='superviseur' order by id desc";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    }
 }
