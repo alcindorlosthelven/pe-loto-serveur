@@ -296,6 +296,39 @@ class VenteControlleur extends Controlleur
         echo $obj;
     }
 
+    public function getVenteParPos($imei)
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $obj = new Vente();
+        $liste=$obj->listeParPos($imei);
+        foreach ($liste as $index => $value) {
+            $id_vendeur = $liste[$index]->id_vendeur;
+            $id_client = $liste[$index]->id_client;
+            $client = new Client();
+            $client = $client->findById($id_client);
+            $vendeur = new Vendeur();
+            $vendeur = $vendeur->findById($id_vendeur);
+
+            $liste[$index]->vendeur = $vendeur;
+            $liste[$index]->client = $client;
+
+            $ve = VenteEliminer::rechercheParIdVente($liste[$index]->id);
+            if ($ve !== null) {
+                $liste[$index]->venteEliminer = $ve;
+            }
+
+        }
+
+        http_response_code(200);
+        $obj = json_encode($liste);
+        echo $obj;
+    }
+
     public function eliminer()
     {
         try {

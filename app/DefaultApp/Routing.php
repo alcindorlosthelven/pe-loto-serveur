@@ -49,6 +49,8 @@ App::get("vente","vente.gets");
 App::post("eliminer-vente","vente.eliminer");
 App::post("vente/confirmerElimination","vente.confimerElimination");
 
+App::get("vente/par-pos-:imei","vente.getVenteParPos")->avec("imei","[0-9]+");
+
 App::get("vente/get-motif-elimination","vente.getMotifElimination");
 App::post("vente/add-motif-elimination","vente.addMotifElimination");
 App::put("vente/update-motif-elimination","vente.updateMotifElimination");
@@ -94,6 +96,9 @@ App::put("pos","pos.update");
 App::get("pos/:id","pos.get")->avec("id","[0-9]+");
 App::get("pos","pos.gets");
 App::delete("pos/:id","pos.delete")->avec("id","[0-9]+");
+App::post("pos/activer-:id","pos.activer")->avec("id","[0-9]+");
+App::post("pos/desactiver-:id","pos.desactiver")->avec("id","[0-9]+");
+App::post("pos/fermer-:id","pos.fermer")->avec("id","[0-9]+");
 //pos
 
 //banque

@@ -480,4 +480,13 @@ class Vente extends Model
         return $stmt->rowCount();
     }
 
+    public  function listeParPos($imei)
+    {
+            $con=self::connection();
+            $req="select *from vente where tid=:imei";
+            $stmt=$con->prepare($req);
+            $stmt->execute(array(":imei"=>$imei));
+            return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    }
+
 }

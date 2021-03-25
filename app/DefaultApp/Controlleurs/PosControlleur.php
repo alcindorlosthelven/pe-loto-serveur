@@ -229,4 +229,110 @@ class PosControlleur extends Controlleur
         echo json_encode(array("message" => $m));
 
     }
+
+    public function activer($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: POST");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        if(empty($id)){
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj=new Pos();
+        $obj=$obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $obj->statut="actif";
+        $m=$obj->update();
+        if($m){
+            http_response_code(200);
+            echo json_encode(array("message"=>"activé avec success"));
+            return;
+        }
+
+        http_response_code(503);
+        echo json_encode(array("message" => $m));
+
+    }
+
+    public function desactiver($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: POST");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        if(empty($id)){
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj=new Pos();
+        $obj=$obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $obj->statut="inactif";
+        $m=$obj->update();
+        if($m){
+            http_response_code(200);
+            echo json_encode(array("message"=>"desactivé avec success"));
+            return;
+        }
+
+        http_response_code(503);
+        echo json_encode(array("message" => $m));
+
+    }
+
+    public function fermer($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: POST");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        if(empty($id)){
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj=new Pos();
+        $obj=$obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $obj->statut="eteint";
+        $m=$obj->update();
+        if($m){
+            http_response_code(200);
+            echo json_encode(array("message"=>"fermé avec success"));
+            return;
+        }
+
+        http_response_code(503);
+        echo json_encode(array("message" => $m));
+
+    }
+
 }
