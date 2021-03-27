@@ -208,7 +208,27 @@ class Vendeur extends Model
             ));
             $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             if (count($data) > 0) {
+                $pos_vendeur=PosVendeur::rechercherParVendeur($data[0]->id);
+                if($pos_vendeur==null){
+                    return
+                        array(
+                            "message"=>"Aucun POS lié a votre compte, contacter l'administration",
+                            "statut"=>"no"
+                    );
+                }
+
+                $pos=new Pos();
+                $pos=$pos->findById($pos_vendeur->id_pos);
+                if($pos->statut !=='actif'){
+                    return
+                        array(
+                            "message"=>"POS desactiver ou inactif , contacter l'administration",
+                            "statut"=>"no"
+                        );
+                }
                 self::setConnection($data[0]->getId());
+                $data[0]->statut="ok";
+                $data[0]->pos=$pos;
                 $data[0]->setConnect("oui");
                 return $data[0];
             } else {
@@ -226,6 +246,21 @@ class Vendeur extends Model
         $stmt=$con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
+    }
+
+
+    public function rechercherParPos($idPos){
+        $con=self::connection();
+        $req="select v.id,v.nom,v.prenom,v.sexe,v.telephone,v.pseudo,v.password,v.connect,v.objet
+        from vendeur as v,pos_vendeur as pv ,pos where 
+        v.id=pv.id_vendeur and pos.id=pv.id_pos and pos.id=:id_pos";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(":id_pos"=>$idPos));
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return $data[0];
+        }
+        return null;
     }
 
 }

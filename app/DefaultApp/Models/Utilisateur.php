@@ -183,6 +183,7 @@ class Utilisateur extends Model
             if (count($data) > 0) {
                 self::setConnection($data[0]->getId());
                 $data[0]->setConnect("oui");
+                $data[0]->statut="ok";
                 return $data[0];
             } else {
                 return "no";

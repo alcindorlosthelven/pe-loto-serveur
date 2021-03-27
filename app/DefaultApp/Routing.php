@@ -91,6 +91,7 @@ App::get("get-billet-gagnant-payer","lotGagnant.getBilletGagnantPayer");
 //fin lot gagnants
 
 //pos
+App::put("pos/update-position","pos.updatePosition");
 App::post("pos","pos.add");
 App::put("pos","pos.update");
 App::get("pos/:id","pos.get")->avec("id","[0-9]+");
@@ -132,6 +133,14 @@ App::get("departement/:id","departement.get")->avec("id","[0-9]+");
 App::get("departement","departement.gets");
 App::delete("departement/:id","departement.delete")->avec("id","[0-9]+");
 //departement
+
+//posVendeur
+App::post("pos-vendeur","posVendeur.add");
+App::put("pos-vendeur","posVendeur.update");
+App::get("pos-vendeur/:id","posVendeur.get")->avec("id","[0-9]+");
+App::get("pos-vendeur","posVendeur.gets");
+App::delete("pos-vendeur/:id","posVendeur.delete")->avec("id","[0-9]+");
+//posVendeur
 
 
 
