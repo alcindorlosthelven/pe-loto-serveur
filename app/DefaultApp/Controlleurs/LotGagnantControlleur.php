@@ -55,11 +55,6 @@ class LotGagnantControlleur extends Controlleur
                 return;
             }
 
-            if(empty($data->lotterie)){
-                http_response_code(503);
-                echo json_encode(array("message" => "lotterie invalide"));
-                return;
-            }
 
             $obj=new LotGagnant();
             $obj->remplire((array)$data);
@@ -236,9 +231,9 @@ class LotGagnantControlleur extends Controlleur
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
 
-        if(isset($_GET['date']) and isset($_GET['tirage']) and isset($_GET['lotterie'])){
+        if(isset($_GET['date']) and isset($_GET['tirage'])){
             $obj=new LotGagnant();
-            $obj=$obj->rechercherParDateTirage($_GET['date'],$_GET['tirage'],$_GET['lotterie']);
+            $obj=$obj->rechercherParDateTirage($_GET['date'],$_GET['tirage']);
             if ($obj == null) {
                 http_response_code(404);
                 echo json_encode(array("message" => "Objet non trouver"));
