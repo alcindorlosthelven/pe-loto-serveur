@@ -115,9 +115,9 @@ class VenteControlleur extends Controlleur
                 $obj->remplire((array)$data);
                 $obj->setParis($paris);
                 $obj->setEliminer("non");
-                $obj->gain='n/a';
-                $obj->total_gain='0';
-                $obj->payer='n/a';
+                $obj->gain = 'n/a';
+                $obj->total_gain = '0';
+                $obj->payer = 'n/a';
 
                 $m = $obj->add();
                 if ($m == "ok") {
@@ -289,12 +289,110 @@ class VenteControlleur extends Controlleur
                 $liste[$index]->venteEliminer = $ve;
             }
 
+            $paris = json_decode($value->paris);
+            //parcourir list des paris pour voir les gagnant
+            $montant=0;
+            foreach ($paris as $i => $p) {
+                $montant += $p->mise;
+            }
+            $liste[$index]->montant=$montant;
         }
 
         http_response_code(200);
         $obj = json_encode($liste);
         echo $obj;
     }
+
+    public function getVenteVendeurDateTirage()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $obj = new Vente();
+
+        if (isset($_GET['id_vendeur']) and isset($_GET['date']) and isset($_GET['tirage'])) {
+
+            $liste = $obj->listerParVendeurDateTirage($_GET['id_vendeur'], $_GET['date'], $_GET['tirage']);
+
+            foreach ($liste as $index => $value) {
+                $id_vendeur = $liste[$index]->id_vendeur;
+                $id_client = $liste[$index]->id_client;
+                $client = new Client();
+                $client = $client->findById($id_client);
+                $vendeur = new Vendeur();
+                $vendeur = $vendeur->findById($id_vendeur);
+
+                $liste[$index]->vendeur = $vendeur;
+                $liste[$index]->client = $client;
+
+                $ve = VenteEliminer::rechercheParIdVente($liste[$index]->id);
+                if ($ve !== null) {
+                    $liste[$index]->venteEliminer = $ve;
+                }
+
+            }
+
+            http_response_code(200);
+            $obj = json_encode($liste);
+            echo $obj;
+            return;
+        }
+
+        http_response_code(200);
+        $obj = json_encode(array("message" => "donnee manquant"));
+        echo $obj;
+
+
+    }
+
+    public function getVenteVendeurDate()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $obj = new Vente();
+
+        if (isset($_GET['id_vendeur']) and isset($_GET['date'])) {
+
+            $liste = $obj->listerParVendeurDate($_GET['id_vendeur'], $_GET['date']);
+
+            foreach ($liste as $index => $value) {
+                $id_vendeur = $liste[$index]->id_vendeur;
+                $id_client = $liste[$index]->id_client;
+                $client = new Client();
+                $client = $client->findById($id_client);
+                $vendeur = new Vendeur();
+                $vendeur = $vendeur->findById($id_vendeur);
+
+                $liste[$index]->vendeur = $vendeur;
+                $liste[$index]->client = $client;
+
+                $ve = VenteEliminer::rechercheParIdVente($liste[$index]->id);
+                if ($ve !== null) {
+                    $liste[$index]->venteEliminer = $ve;
+                }
+
+            }
+
+            http_response_code(200);
+            $obj = json_encode($liste);
+            echo $obj;
+            return;
+        }
+
+        http_response_code(200);
+        $obj = json_encode(array("message" => "donnee manquant"));
+        echo $obj;
+
+
+    }
+
 
     public function getVenteParPos($imei)
     {
@@ -305,7 +403,7 @@ class VenteControlleur extends Controlleur
         header("Content-Type: application/json; charset=UTF-8");
 
         $obj = new Vente();
-        $liste=$obj->listeParPos($imei);
+        $liste = $obj->listeParPos($imei);
         foreach ($liste as $index => $value) {
             $id_vendeur = $liste[$index]->id_vendeur;
             $id_client = $liste[$index]->id_client;
@@ -540,26 +638,27 @@ class VenteControlleur extends Controlleur
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
         $obj = new MotifElimination();
-        $liste=$obj->findAll();
+        $liste = $obj->findAll();
         http_response_code(200);
         $obj = json_encode($liste);
         echo $obj;
     }
 
-    public function deleteMotif($id){
+    public function deleteMotif($id)
+    {
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
         header("Access-Control-Allow-Methods: DELETE");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-        if(empty($id)){
+        if (empty($id)) {
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
             return;
         }
 
-        $obj=new MotifElimination();
-        $obj=$obj->findById($id);
+        $obj = new MotifElimination();
+        $obj = $obj->findById($id);
 
         if ($obj == null) {
             http_response_code(404);
@@ -567,10 +666,10 @@ class VenteControlleur extends Controlleur
             return;
         }
 
-        $m=$obj->deleteById($id);
-        if($m){
+        $m = $obj->deleteById($id);
+        if ($m) {
             http_response_code(200);
-            echo json_encode(array("message"=>"supprimer avec success"));
+            echo json_encode(array("message" => "supprimer avec success"));
             return;
         }
 
@@ -602,10 +701,10 @@ class VenteControlleur extends Controlleur
             return;
         }
 
-        $obj->payer='oui';
+        $obj->payer = 'oui';
 
-        $m=$obj->update();
-        if($m!="ok"){
+        $m = $obj->update();
+        if ($m != "ok") {
             http_response_code(404);
             echo json_encode(array("message" => "imposible de faire cette transaction"));
             return;
@@ -616,27 +715,29 @@ class VenteControlleur extends Controlleur
         echo $obj;
     }
 
-    public function totalVente(){
+    public function totalVente()
+    {
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-        $v=new Vente();
-        $obj=$v->total();
+        $v = new Vente();
+        $obj = $v->total();
         http_response_code(200);
         $obj = json_encode($obj);
         echo $obj;
     }
 
-    public function totalFicheEliminer(){
+    public function totalFicheEliminer()
+    {
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-        $v=new VenteEliminer();
-        $obj=$v->total();
+        $v = new VenteEliminer();
+        $obj = $v->total();
         http_response_code(200);
         $obj = json_encode($obj);
         echo $obj;

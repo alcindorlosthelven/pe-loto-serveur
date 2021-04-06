@@ -489,4 +489,29 @@ class Vente extends Model
             return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
     }
 
+    public function listerParVendeurDateTirage($id_vendeur,$date,$tirage){
+        $con=self::connection();
+        $req="select *from vente where date=:date and id_vendeur=:id_vendeur and tirage=:tirage and eliminer='non'";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(
+            ":date"=>$date,
+            ":id_vendeur"=>$id_vendeur,
+            ":tirage"=>$tirage
+        ));
+
+        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    }
+
+    public function listerParVendeurDate($id_vendeur,$date){
+        $con=self::connection();
+        $req="select *from vente where date=:date and id_vendeur=:id_vendeur and eliminer='non'";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(
+            ":date"=>$date,
+            ":id_vendeur"=>$id_vendeur
+        ));
+
+        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    }
+
 }

@@ -58,6 +58,8 @@ App::delete("vente/delete-motif/:id","vente.deleteMotif")->avec("id","[0-9]+");
 App::put("payer-ticket/:id","vente.payerTicket")->avec("id","[0-9]+");
 App::get("vente/total-vente","vente.totalVente");
 App::get("vente/total-fiche-eliminer","vente.totalFicheEliminer");
+App::get("vente-vendeur-date-tirage","vente.getVenteVendeurDateTirage");
+App::get("vente-vendeur-date","vente.getVenteVendeurDate");
 
 //fin vente
 
@@ -88,6 +90,9 @@ App::get("lot-gagnant-date-tirage","lotGagnant.getParDateTirage");
 App::delete("lot-gagnant/:id","lotGagnant.delete")->avec("id","[0-9]+");
 App::get("get-billet-gagnant","lotGagnant.getBilletGagnant");
 App::get("get-billet-gagnant-payer","lotGagnant.getBilletGagnantPayer");
+
+App::get("get-lot-gagnant-from-magayo-midi","lotGagnant.getLotGagnantFromMagayoMidi");
+
 //fin lot gagnants
 
 //pos

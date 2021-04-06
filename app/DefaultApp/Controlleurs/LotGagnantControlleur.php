@@ -301,4 +301,22 @@ class LotGagnantControlleur extends Controlleur
         }
     }
 
+    public function getLotGagnantFromMagayoMidi(){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $lg=LotGagnant::getLotGagnantFromMagayoMidi();
+        if($lg==null){
+            http_response_code(404);
+            echo json_encode(array("message" => "non disponible"));
+            return;
+        }
+
+        http_response_code(200);
+        echo json_encode($lg);
+    }
+
 }

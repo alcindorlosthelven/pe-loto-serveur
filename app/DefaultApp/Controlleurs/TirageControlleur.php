@@ -128,12 +128,9 @@ class TirageControlleur extends Controlleur
 
         $obj=new Tirage();
         if(isset($_GET['encours'])){
+            http_response_code(200);
             $liste=$obj->listeEncours();
-            if(count($liste)>0){
-                $obj=$liste[0];
-                http_response_code(200);
-                echo json_encode($obj);
-            }
+            echo json_encode($liste);
         }else{
             $liste=$obj->findAll();
             http_response_code(200);

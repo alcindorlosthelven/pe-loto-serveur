@@ -101,5 +101,4 @@ class Tirage extends Model
         return true;
     }
 
-
 }
