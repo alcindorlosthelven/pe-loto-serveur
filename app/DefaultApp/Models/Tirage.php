@@ -68,5 +68,38 @@ class Tirage extends Model
         return $data;
     }
 
+    public static function rechercherParNomActif($nom){
+        $con=self::connection();
+        $req="select *from tirage where tirage=:tirage and statut='en cours'";
+        $stmt=$con->prepare($req);
+
+        $stmt->execute(array(
+            ":tirage"=>$nom
+        ));
+
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return $data[0];
+        }
+        return null;
+    }
+
+    public static function isTirageEncour($tirage){
+        $con=self::connection();
+        $req="select *from tirage where tirage=:tirage and statut='n/a'";
+        $stmt=$con->prepare($req);
+
+        $stmt->execute(array(
+            ":tirage"=>$tirage
+        ));
+
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return false;
+        }
+
+        return true;
+    }
+
 
 }

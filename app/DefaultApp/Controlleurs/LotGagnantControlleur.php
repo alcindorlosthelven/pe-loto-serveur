@@ -4,6 +4,7 @@
 namespace app\DefaultApp\Controlleurs;
 
 use app\DefaultApp\Models\LotGagnant;
+use app\DefaultApp\Models\Tirage;
 use app\DefaultApp\Models\Vente;
 use app\DefaultApp\Models\VenteEliminer;
 use systeme\Controlleur\Controlleur;
@@ -55,6 +56,12 @@ class LotGagnantControlleur extends Controlleur
                 return;
             }
 
+
+            if(Tirage::isTirageEncour($data->tirage)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Imposible d'ajouter le lot gagnant, le tirage choisie est en cours"));
+                return;
+            }
 
             $obj=new LotGagnant();
             $obj->remplire((array)$data);
