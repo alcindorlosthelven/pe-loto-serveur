@@ -9,7 +9,7 @@ use systeme\Model\Model;
 class Tirage extends Model
 {
 
-    public $id,$tirage,$statut;
+    public $id,$tirage,$statut,$nom,$heure_fermeture,$heure_ouverture,$heure_rapport,$email_rapport,$site_api;
 
     /**
      * @return mixed

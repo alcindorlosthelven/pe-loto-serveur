@@ -69,6 +69,7 @@ App::put("tirage","tirage.update");
 App::get("tirage/:id","tirage.get")->avec("id","[0-9]+");
 App::get("tirage","tirage.gets");
 App::delete("tirage/:id","tirage.delete")->avec("id","[0-9]+");
+App::get("fermer-tirage","tirage.fermer");
 //fin Tirage
 
 //Tirage

@@ -9,7 +9,7 @@ use systeme\Model\Model;
 class CodeJeux extends Model
 {
     protected $table="code_jeux";
-    public $id,$code,$description;
+    public $id,$code,$description,$gagne;
     /**
      * @return mixed
      */
@@ -57,6 +57,24 @@ class CodeJeux extends Model
     {
         $this->description = $description;
     }
+
+    /**
+     * @return mixed
+     */
+    public function getGagne()
+    {
+        return $this->gagne;
+    }
+
+    /**
+     * @param mixed $gagne
+     */
+    public function setGagne($gagne): void
+    {
+        $this->gagne = $gagne;
+    }
+
+
 
 
 

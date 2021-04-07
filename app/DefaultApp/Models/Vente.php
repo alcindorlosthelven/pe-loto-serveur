@@ -433,6 +433,12 @@ class Vente extends Model
             $paris=json_decode($v->paris);
             //parcourir list des paris pour voir les gagnant
             foreach ($paris as $i=>$p){
+                $cj=new CodeJeux();
+                $cj=$cj->findByCode($p->codeJeux);
+                $prime=$cj->gagne;
+                if(stristr($prime,"|")){
+
+                }
                 //gplot1
                 if($p->pari==$lg->lot1){
                     $gain='oui';

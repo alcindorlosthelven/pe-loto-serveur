@@ -31,6 +31,13 @@ class CodeJeuxControlleur extends Controlleur
                 return;
             }
 
+            if(empty($data->gagne)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Gagne invalide"));
+                return;
+            }
+
+
 
             $codeJeux=new CodeJeux();
             $codeJeux->remplire((array)$data);
@@ -75,6 +82,13 @@ class CodeJeuxControlleur extends Controlleur
         if(empty($data->description)){
             http_response_code(503);
             echo json_encode(array("message" => "description invalide"));
+            return;
+        }
+
+
+        if(empty($data->gagne)){
+            http_response_code(503);
+            echo json_encode(array("message" => "Gagne invalide"));
             return;
         }
 
