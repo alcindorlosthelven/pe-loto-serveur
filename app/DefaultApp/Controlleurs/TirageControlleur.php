@@ -5,6 +5,7 @@ namespace app\DefaultApp\Controlleurs;
 
 
 use app\DefaultApp\Models\Tirage;
+use app\DefaultApp\Models\Vente;
 use Cassandra\Time;
 use systeme\Controlleur\Controlleur;
 
@@ -134,6 +135,7 @@ class TirageControlleur extends Controlleur
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
+
         if (empty($id)) {
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
@@ -220,30 +222,120 @@ class TirageControlleur extends Controlleur
         header("Content-Type: application/json; charset=UTF-8");
         date_default_timezone_set("America/Port-au-Prince");
         $heureActuel = date('H:i');
-        $t=new Tirage();
-        $liste=$t->findAll();
-        foreach($liste as $ti){
-            $h_ouverture=$ti->heure_ouverture;
-            $h_fermeture=$ti->heure_fermeture;
+        $t = new Tirage();
+        $liste = $t->findAll();
+        foreach ($liste as $ti) {
+            $h_ouverture = $ti->heure_ouverture;
+            $h_fermeture = $ti->heure_fermeture;
 
-            if($ti->statut=="en cours"){
-                if($heureActuel>=$h_fermeture){
-                    $ti->statut="n/a";
+            if ($ti->statut == "en cours") {
+                if ($heureActuel >= $h_fermeture) {
+                    $ti->statut = "n/a";
                     $ti->update();
-                    echo json_encode(array("message"=>"tirage {$ti->tirage} fermer avec success"));
+                    echo json_encode(array("message" => "tirage {$ti->tirage} fermer avec success"));
                 }
             }
 
-            if($ti->statut=="n/a"){
-                if($heureActuel>=$h_ouverture && $heureActuel<$h_fermeture){
-                    $ti->statut="en cours";
+            if ($ti->statut == "n/a") {
+                if ($heureActuel >= $h_ouverture && $heureActuel < $h_fermeture) {
+                    $ti->statut = "en cours";
                     $ti->update();
-                    echo json_encode(array("message"=>"tirage {$ti->tirage} ouvrir avec success"));
+                    echo json_encode(array("message" => "tirage {$ti->tirage} ouvrir avec success"));
                 }
             }
 
         }
 
-        echo json_encode(array("message"=>"aucun tirage a ouvrir ou fermer"));
+        echo json_encode(array("message" => "aucun tirage a ouvrir ou fermer"));
     }
+
+    public function fermerImediatement($id)
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: DELETE");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        date_default_timezone_set("America/Port-au-Prince");
+        $heureActuel = date('H:i');
+
+        if (empty($id)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj = new Tirage();
+        $obj = $obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $obj->heure_fermeture = $heureActuel;
+        $obj->statut = "n/a";
+        $m = $obj->update();
+        if ($m == "ok") {
+            http_response_code(200);
+            echo json_encode(array("message" => "tirage {$obj->tirage} fermer avec success"));
+            return;
+        }
+
+        http_response_code(404);
+        echo json_encode(array("message" => $m));
+    }
+
+    public function programmerFermeture($id)
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: DELETE");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        date_default_timezone_set("America/Port-au-Prince");
+
+        $data = json_decode(file_get_contents("php://input"));
+
+        if (empty($data->heure)) {
+            http_response_code(503);
+            echo json_encode(array("message" => " heure invalide"));
+            return;
+        }
+
+        if (empty($id)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj = new Tirage();
+        $obj = $obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $obj->heure_fermeture = $data->heure;
+        if ($obj->statut == "n/a") {
+            $obj->statut = "en cours";
+        }
+        if ($obj->statut == "fermer") {
+            $obj->statut = "en cours";
+        }
+        $m = $obj->update();
+        if ($m == "ok") {
+            http_response_code(200);
+            echo json_encode(array("message" => "tirage {$obj->tirage} programmer avec success"));
+            return;
+        }
+
+        http_response_code(404);
+        echo json_encode(array("message" => $m));
+    }
+
+
 }

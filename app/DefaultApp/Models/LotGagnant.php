@@ -12,6 +12,7 @@ class LotGagnant extends Model
     protected $table="lot_gagnant";
     public $id,$date,$tirage,$lot1,$lot2,$lot3,$loto3;
     public $lotterie;
+    public $borlette,$loto4,$loto5,$mariaj;
 
 
     public function rechercherParDateTirage($date,$tirage){

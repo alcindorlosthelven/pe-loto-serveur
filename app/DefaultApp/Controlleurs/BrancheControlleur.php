@@ -5,6 +5,7 @@ namespace app\DefaultApp\Controlleurs;
 
 
 use app\DefaultApp\Models\Branche;
+use app\DefaultApp\Models\Reseau;
 use systeme\Controlleur\Controlleur;
 
 class BrancheControlleur extends Controlleur
@@ -21,6 +22,12 @@ class BrancheControlleur extends Controlleur
             if(empty($data->branche)){
                 http_response_code(503);
                 echo json_encode(array("message" => "code invalide"));
+                return;
+            }
+
+            if(empty($data->id_reseau)){
+                http_response_code(503);
+                echo json_encode(array("message" => "reseau invalide"));
                 return;
             }
 
@@ -61,6 +68,12 @@ class BrancheControlleur extends Controlleur
         if(empty($data->branche)){
             http_response_code(503);
             echo json_encode(array("message" => "code invalide"));
+            return;
+        }
+
+        if(empty($data->id_reseau)){
+            http_response_code(503);
+            echo json_encode(array("message" => "reseau invalide"));
             return;
         }
 
@@ -107,6 +120,12 @@ class BrancheControlleur extends Controlleur
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
         }
+
+        $id_reseau=$ob->id_reseau;
+        $r=new Reseau();
+        $r=$r->findById($id_reseau);
+        $ob->reseau=$r;
+
         http_response_code(200);
         $ob=json_encode($ob);
         echo $ob;
@@ -121,6 +140,12 @@ class BrancheControlleur extends Controlleur
 
         $ob=new Branche();
         $liste=$ob->findAll();
+        foreach ($liste as $i=>$value){
+            $id_reseau=$value->id_reseau;
+            $r=new Reseau();
+            $r=$r->findById($id_reseau);
+            $liste[$i]->reseau=$r;
+        }
         http_response_code(200);
         $ob=json_encode($liste);
         echo $ob;

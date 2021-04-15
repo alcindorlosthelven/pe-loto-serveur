@@ -333,6 +333,14 @@ class VenteControlleur extends Controlleur
                     $liste[$index]->venteEliminer = $ve;
                 }
 
+                $paris = json_decode($value->paris);
+                //parcourir list des paris pour voir les gagnant
+                $montant=0;
+                foreach ($paris as $i => $p) {
+                    $montant += $p->mise;
+                }
+                $liste[$index]->montant=$montant;
+
             }
 
             http_response_code(200);
@@ -378,6 +386,13 @@ class VenteControlleur extends Controlleur
                     $liste[$index]->venteEliminer = $ve;
                 }
 
+                $paris = json_decode($value->paris);
+                //parcourir list des paris pour voir les gagnant
+                $montant=0;
+                foreach ($paris as $i => $p) {
+                    $montant += $p->mise;
+                }
+                $liste[$index]->montant=$montant;
             }
 
             http_response_code(200);
@@ -420,6 +435,14 @@ class VenteControlleur extends Controlleur
                 $liste[$index]->venteEliminer = $ve;
             }
 
+
+            $paris = json_decode($value->paris);
+            //parcourir list des paris pour voir les gagnant
+            $montant=0;
+            foreach ($paris as $i => $p) {
+                $montant += $p->mise;
+            }
+            $liste[$index]->montant=$montant;
         }
 
         http_response_code(200);
@@ -741,5 +764,18 @@ class VenteControlleur extends Controlleur
         http_response_code(200);
         $obj = json_encode($obj);
         echo $obj;
+    }
+
+    public function listeParisParDate()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        http_response_code(200);
+        $liste = Vente::listeParisParDate($_GET['date1'],$_GET['date2'],$_GET['tirage'],$_GET['type_jeux']);
+        echo json_encode($liste);
     }
 }

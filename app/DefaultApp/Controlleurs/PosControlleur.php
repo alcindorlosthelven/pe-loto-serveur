@@ -23,11 +23,6 @@ class PosControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->id_departement)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id departement inccorect"));
-                return;
-            }
 
             if(empty($data->id_superviseur)){
                 http_response_code(503);
@@ -89,11 +84,6 @@ class PosControlleur extends Controlleur
             return;
         }
 
-        if(empty($data->id_departement)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id departement inccorect"));
-            return;
-        }
 
         if(empty($data->id_superviseur)){
             http_response_code(503);
@@ -180,17 +170,14 @@ class PosControlleur extends Controlleur
         $su=new Utilisateur();
         foreach($liste as $i=>$value){
             $vendeur=new Vendeur();
-            $id_departement=$value->id_departement;
             $id_superviseur=$value->id_superviseur;
             $id_branch=$value->id_branche;
             $id_banque=$value->id_banque;
             $b=$b->findById($id_banque);
             $br=$br->findById($id_branch);
             $su=$su->findById($id_superviseur);
-            $d=$d->findById($id_departement);
             $vendeur=$vendeur->rechercherParPos($liste[$i]->id);
             $liste[$i]->vendeur=$vendeur;
-            $liste[$i]->departement=$d;
             $liste[$i]->superviseur=$su;
             $liste[$i]->branche=$br;
             $liste[$i]->banque=$b;

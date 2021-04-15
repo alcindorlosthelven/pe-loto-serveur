@@ -8,6 +8,6 @@ use systeme\Model\Model;
 
 class Departement extends Model
 {
- public $id,$departement;
+ public $id,$departement,$id_reseau_globale;
 
 }

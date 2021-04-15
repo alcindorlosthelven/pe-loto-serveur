@@ -3,11 +3,11 @@
 
 namespace app\DefaultApp\Controlleurs;
 
-use app\DefaultApp\Models\Departement;
-use app\DefaultApp\Models\ReseauGlobale;
+use app\DefaultApp\Models\Groupe;
+use app\DefaultApp\Models\Reseau;
 use systeme\Controlleur\Controlleur;
 
-class DepartementControlleur extends Controlleur
+class ReseauControlleur extends Controlleur
 {
     public function add(){
         try{
@@ -18,19 +18,19 @@ class DepartementControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->departement)){
+            if(empty($data->nom)){
                 http_response_code(503);
-                echo json_encode(array("message" => "departement invalide"));
+                echo json_encode(array("message" => "nom invalide"));
                 return;
             }
 
-            if(empty($data->id_reseau_globale)){
+            if(empty($data->id_groupe)){
                 http_response_code(503);
-                echo json_encode(array("message" => "reseau globale invalide"));
+                echo json_encode(array("message" => "groupe invalide"));
                 return;
             }
 
-            $ob=new Departement();
+            $ob=new Reseau();
             $ob->remplire((array)$data);
             $m=$ob->add();
             if($m=="ok"){
@@ -64,19 +64,20 @@ class DepartementControlleur extends Controlleur
             return;
         }
 
-        if(empty($data->departement)){
+        if(empty($data->nom)){
             http_response_code(503);
-            echo json_encode(array("message" => "departement invalide"));
+            echo json_encode(array("message" => "nom invalide"));
             return;
         }
 
-        if(empty($data->id_reseau_globale)){
+        if(empty($data->id_groupe)){
             http_response_code(503);
-            echo json_encode(array("message" => "reseau globale invalide"));
+            echo json_encode(array("message" => "groupe invalide"));
             return;
         }
 
-        $ob=new Departement();
+
+        $ob=new Reseau();
         $ob = $ob->findById($data->id);
 
         if ($ob == null) {
@@ -110,7 +111,7 @@ class DepartementControlleur extends Controlleur
             return;
         }
 
-        $ob=new Departement();
+        $ob=new Reseau();
         $ob=$ob->findById($id);
 
         if ($ob == null) {
@@ -118,6 +119,11 @@ class DepartementControlleur extends Controlleur
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
         }
+        $id_groupe=$ob->id_groupe;
+        $g=new Groupe();
+        $g=$g->findById($id_groupe);
+        $ob->groupe=$g;
+
         http_response_code(200);
         $ob=json_encode($ob);
         echo $ob;
@@ -130,13 +136,13 @@ class DepartementControlleur extends Controlleur
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
 
-        $ob=new Departement();
+        $ob=new Reseau();
         $liste=$ob->findAll();
-        foreach ($liste as $i=>$value){
-            $id_reseau=$value->id_reseau_globale;
-            $r=new ReseauGlobale();
-            $r=$r->findById($id_reseau);
-            $liste[$i]->reseau=$r;
+        foreach ($liste as $i=>$l){
+            $id_groupe=$l->id_groupe;
+            $g=new Groupe();
+            $g=$g->findById($id_groupe);
+            $liste[$i]->groupe=$g;
         }
         http_response_code(200);
         $ob=json_encode($liste);
@@ -156,7 +162,7 @@ class DepartementControlleur extends Controlleur
             return;
         }
 
-        $obj=new Departement();
+        $obj=new Reseau();
         $obj=$obj->findById($id);
 
         if ($obj == null) {

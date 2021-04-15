@@ -8,7 +8,7 @@ use systeme\Model\Model;
 
 class Branche extends Model
 {
- public $id,$branche;
+ public $id,$branche,$id_reseau;
 
     /**
      * @return mixed

@@ -48,8 +48,7 @@ App::get("vente/:id","vente.get")->avec("id","[0-9]+");
 App::get("vente","vente.gets");
 App::post("eliminer-vente","vente.eliminer");
 App::post("vente/confirmerElimination","vente.confimerElimination");
-
-App::get("vente/par-pos-:imei","vente.getVenteParPos")->avec("imei","[0-9]+");
+App::get("vente/par-pos-:imei","vente.getVenteParPos")->avec("imei","[0-9a-z\-]+");
 
 App::get("vente/get-motif-elimination","vente.getMotifElimination");
 App::post("vente/add-motif-elimination","vente.addMotifElimination");
@@ -60,6 +59,7 @@ App::get("vente/total-vente","vente.totalVente");
 App::get("vente/total-fiche-eliminer","vente.totalFicheEliminer");
 App::get("vente-vendeur-date-tirage","vente.getVenteVendeurDateTirage");
 App::get("vente-vendeur-date","vente.getVenteVendeurDate");
+App::get("liste-paris-par-date","vente.listeParisParDate");
 
 //fin vente
 
@@ -70,6 +70,9 @@ App::get("tirage/:id","tirage.get")->avec("id","[0-9]+");
 App::get("tirage","tirage.gets");
 App::delete("tirage/:id","tirage.delete")->avec("id","[0-9]+");
 App::get("fermer-tirage","tirage.fermer");
+
+App::post("fermer-imediatement/:id","tirage.fermerImediatement")->avec("id","[0-9]+");
+App::post("programmer-fermeture/:id","tirage.programmerFermeture")->avec("id","[0-9]+");
 //fin Tirage
 
 //Tirage
@@ -91,7 +94,7 @@ App::get("lot-gagnant-date-tirage","lotGagnant.getParDateTirage");
 App::delete("lot-gagnant/:id","lotGagnant.delete")->avec("id","[0-9]+");
 App::get("get-billet-gagnant","lotGagnant.getBilletGagnant");
 App::get("get-billet-gagnant-payer","lotGagnant.getBilletGagnantPayer");
-
+App::get("get-billet-gagnant-tout","lotGagnant.getBilletGagnantTout");
 App::get("get-lot-gagnant-from-magayo-midi","lotGagnant.getLotGagnantFromMagayoMidi");
 
 //fin lot gagnants
@@ -147,6 +150,31 @@ App::get("pos-vendeur/:id","posVendeur.get")->avec("id","[0-9]+");
 App::get("pos-vendeur","posVendeur.gets");
 App::delete("pos-vendeur/:id","posVendeur.delete")->avec("id","[0-9]+");
 //posVendeur
+
+//reseau globale
+App::post("reseau-globale","reseauGlobale.add");
+App::put("reseau-globale","reseauGlobale.update");
+App::get("reseau-globale/:id","reseauGlobale.get")->avec("id","[0-9]+");
+App::get("reseau-globale","reseauGlobale.gets");
+App::delete("reseau-globale/:id","reseauGlobale.delete")->avec("id","[0-9]+");
+//reseau globale
+
+//groupe
+App::post("groupe","groupe.add");
+App::put("groupe","groupe.update");
+App::get("groupe/:id","groupe.get")->avec("id","[0-9]+");
+App::get("groupe","groupe.gets");
+App::delete("groupe/:id","groupe.delete")->avec("id","[0-9]+");
+//groupe
+
+//reseau
+App::post("reseau","reseau.add");
+App::put("reseau","reseau.update");
+App::get("reseau/:id","reseau.get")->avec("id","[0-9]+");
+App::get("reseau","reseau.gets");
+App::delete("reseau/:id","reseau.delete")->avec("id","[0-9]+");
+//reseau
+
 
 
 
