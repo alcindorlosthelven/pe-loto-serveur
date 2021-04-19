@@ -149,6 +149,34 @@ class ReseauControlleur extends Controlleur
         echo $ob;
     }
 
+    public function getsReseauParBranche($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+
+        if(empty($id)){
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+
+        $ob=new Reseau();
+        $liste=$ob->listeReseauParBranche($id);
+        foreach ($liste as $i=>$l){
+            $id_groupe=$l->id_groupe;
+            $g=new Groupe();
+            $g=$g->findById($id_groupe);
+            $liste[$i]->groupe=$g;
+        }
+        http_response_code(200);
+        $ob=json_encode($liste);
+        echo $ob;
+    }
+
     public function delete($id){
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");

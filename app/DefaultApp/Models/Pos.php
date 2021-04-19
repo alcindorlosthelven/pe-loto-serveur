@@ -9,6 +9,7 @@ use systeme\Model\Model;
 class Pos extends Model
 {
  public $id,$imei,$longitude,$latitude,$statut,$id_superviseur,$id_branche,$id_banque;
+ public $id_reseau,$id_groupe,$id_departement;
 
  public function rechercherParVendeur($idvendeur){
      $con=self::connection();

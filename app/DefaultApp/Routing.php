@@ -141,6 +141,7 @@ App::put("departement","departement.update");
 App::get("departement/:id","departement.get")->avec("id","[0-9]+");
 App::get("departement","departement.gets");
 App::delete("departement/:id","departement.delete")->avec("id","[0-9]+");
+App::get("departement-par-groupe/:id","departement.getsDepartementParGroupe")->avec("id","[0-9]+");
 //departement
 
 //posVendeur
@@ -165,12 +166,14 @@ App::put("groupe","groupe.update");
 App::get("groupe/:id","groupe.get")->avec("id","[0-9]+");
 App::get("groupe","groupe.gets");
 App::delete("groupe/:id","groupe.delete")->avec("id","[0-9]+");
+App::get("groupe-par-reseau/:id","groupe.getsGroupeParReseau")->avec("id","[0-9]+");
 //groupe
 
 //reseau
 App::post("reseau","reseau.add");
 App::put("reseau","reseau.update");
 App::get("reseau/:id","reseau.get")->avec("id","[0-9]+");
+App::get("reseau-par-branche/:id","reseau.getsReseauParBranche")->avec("id","[0-9]+");
 App::get("reseau","reseau.gets");
 App::delete("reseau/:id","reseau.delete")->avec("id","[0-9]+");
 //reseau

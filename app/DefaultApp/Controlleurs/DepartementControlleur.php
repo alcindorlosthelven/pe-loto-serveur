@@ -143,6 +143,26 @@ class DepartementControlleur extends Controlleur
         echo $ob;
     }
 
+    public function getsDepartementParGroupe($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $ob=new Departement();
+        $liste=$ob->listeDepartementParGroupe($id);
+        foreach ($liste as $i=>$value){
+            $id_reseau=$value->id_reseau_globale;
+            $r=new ReseauGlobale();
+            $r=$r->findById($id_reseau);
+            $liste[$i]->reseau=$r;
+        }
+        http_response_code(200);
+        $ob=json_encode($liste);
+        echo $ob;
+    }
+
     public function delete($id){
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
