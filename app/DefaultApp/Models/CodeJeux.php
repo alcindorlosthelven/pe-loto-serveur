@@ -74,9 +74,13 @@ class CodeJeux extends Model
         $this->gagne = $gagne;
     }
 
-
-
-
+    public function findAll(){
+        $con=self::connection();
+        $req="select *from code_jeux order by id asc";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    }
 
     public function findByCode($code){
         $con=self::connection();

@@ -92,22 +92,11 @@ class VenteControlleur extends Controlleur
                 return;
             }
 
-            if (empty($data->date)) {
-                http_response_code(503);
-                echo json_encode(array("message" => "date invalide"));
-                return;
-            }
-
-            if (empty($data->heure)) {
-                http_response_code(503);
-                echo json_encode(array("message" => "heure invalide"));
-                return;
-            }
-
             /*$cjeux=false;
             foreach ($data->paris as $pari){
                 $cjeux=CodeJeux::existe($pari->codeJeux);
             }*/
+
             $cjeux = true;
             if ($cjeux === true) {
                 $paris = json_encode($data->paris);
@@ -115,6 +104,8 @@ class VenteControlleur extends Controlleur
                 $obj->remplire((array)$data);
                 $obj->setParis($paris);
                 $obj->setEliminer("non");
+                $obj->setDate(date("Y-m-d"));
+                $obj->setHeure(date("H:i:s"));
                 $obj->gain = 'n/a';
                 $obj->total_gain = '0';
                 $obj->payer = 'n/a';
@@ -407,7 +398,6 @@ class VenteControlleur extends Controlleur
 
 
     }
-
 
     public function getVenteParPos($imei)
     {

@@ -235,15 +235,15 @@ class PosControlleur extends Controlleur
         header("Content-Type: application/json; charset=UTF-8");
         $pos=new Pos();
         $liste=$pos->findAll();
-        $b=new Banque();
-        $d=new Departement();
-        $br=new Branche();
-        $su=new Utilisateur();
-        $gr=new Groupe();
-        $reseau=new Reseau();
-        $vendeur=new Vendeur();
-
         foreach($liste as $i=>$value){
+            $b=new Banque();
+            $d=new Departement();
+            $br=new Branche();
+            $su=new Utilisateur();
+            $gr=new Groupe();
+            $reseau=new Reseau();
+            $vendeur=new Vendeur();
+
             $id_superviseur=$value->id_superviseur;
             $id_branch=$value->id_branche;
             $id_banque=$value->id_banque;

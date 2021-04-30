@@ -22,12 +22,7 @@ class LotGagnantControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            if(empty($data->date)){
-                http_response_code(503);
-                echo json_encode(array("message" => "Date invalide"));
-                return;
-            }
-
+            $date=date("Y-m-d");
 
             if(empty($data->tirage)){
                 http_response_code(503);
@@ -110,6 +105,7 @@ class LotGagnantControlleur extends Controlleur
             $obj->loto4=json_encode($loto4);
             $obj->loto5=json_encode($loto5);
             $obj->mariaj=json_encode($mariaj);
+            $obj->date=$date;
             $m=$obj->add();
             if($m=="ok"){
                 Vente::updateBilletForLotGagnant($data->date,$data->tirage);
