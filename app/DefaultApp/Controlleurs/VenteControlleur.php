@@ -44,9 +44,23 @@ class VenteControlleur extends Controlleur
                 if ($cl != null) {
                     $data->id_client = $cl->getId();
                 } else {
-                    http_response_code(503);
-                    echo json_encode(array("message" => "id client invalide"));
-                    return;
+                    $cl=new Client();
+                    $cl->id=1;
+                    $cl->nom="default";
+                    $cl->prenom="client";
+                    $cl->sexe="m";
+                    $cl->telephone="00000000";
+                    $cl->pseudo="defaultclient";
+                    $cl->connect="non";
+                    $cl->objet="client";
+                    $m=$cl->add();
+                    if($m=="ok"){
+                        $data->id_client=1;
+                    }else{
+                        http_response_code(503);
+                        echo json_encode(array("message" => "id client invalide"));
+                        return;
+                    }
                 }
             }
 

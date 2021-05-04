@@ -2,23 +2,13 @@
 
 
 namespace app\DefaultApp\Controlleurs;
-
-
 use app\DefaultApp\Models\Client;
-use systeme\Controlleur\Controlleur;
 
-class ClientControlleur extends Controlleur
+class ClientControlleur extends BaseControlleur
 {
-
     public function add(){
         try{
-            header("Access-Control-Allow-Origin: *");
-            header("Content-Type: application/json; charset=UTF-8");
-            header("Access-Control-Allow-Methods: POST");
-            header("Access-Control-Max-Age: 3600");
-            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
-
             if(empty($data->nom)){
                 http_response_code(503);
                 echo json_encode(array("message" => "nom invalide"));
@@ -74,14 +64,7 @@ class ClientControlleur extends Controlleur
 
     public function update(){
         try{
-            header("Access-Control-Allow-Origin: *");
-            header("Content-Type: application/json; charset=UTF-8");
-            header("Access-Control-Allow-Methods: PUT");
-            header("Access-Control-Max-Age: 3600");
-            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
             $data = json_decode(file_get_contents("php://input"));
-
             if(empty($data->id)){
                 http_response_code(503);
                 echo json_encode(array("message" => "id invalide"));
@@ -140,11 +123,6 @@ class ClientControlleur extends Controlleur
     }
 
     public function get($id){
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Methods: GET");
-        header("Access-Control-Allow-Credentials: true");
-        header("Content-Type: application/json; charset=UTF-8");
         if(empty($id)){
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
@@ -165,12 +143,6 @@ class ClientControlleur extends Controlleur
     }
 
     public function gets(){
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Methods: GET");
-        header("Access-Control-Allow-Credentials: true");
-        header("Content-Type: application/json; charset=UTF-8");
-
         $obj=new Client();
         $liste=$obj->findAll();
         http_response_code(200);
@@ -179,11 +151,6 @@ class ClientControlleur extends Controlleur
     }
 
     public function delete($id){
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Methods: DELETE");
-        header("Access-Control-Allow-Credentials: true");
-        header("Content-Type: application/json; charset=UTF-8");
         if(empty($id)){
             http_response_code(503);
             echo json_encode(array("message" => "id invalide"));
@@ -212,12 +179,6 @@ class ClientControlleur extends Controlleur
     }
 
     public function getDefaultClient(){
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Methods: GET");
-        header("Access-Control-Allow-Credentials: true");
-        header("Content-Type: application/json; charset=UTF-8");
-
         $obj=new Client();
         $obj=$obj->getDefaultClient();
         if ($obj== null) {
@@ -231,11 +192,6 @@ class ClientControlleur extends Controlleur
     }
 
     public function total(){
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: access");
-        header("Access-Control-Allow-Methods: GET");
-        header("Access-Control-Allow-Credentials: true");
-        header("Content-Type: application/json; charset=UTF-8");
         $v=new Client();
         $obj=$v->total();
         http_response_code(200);

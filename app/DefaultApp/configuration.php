@@ -1,9 +1,7 @@
 <?php
+use Dotenv\Dotenv;
 //LES CONSTANTS
 define('ENVIRONMENT', 'development');
-//define('ENVIRONMENT', 'production');
-
-// Allow from any origin
 if (isset($_SERVER['HTTP_ORIGIN'])) {
     // Decide if the origin in $_SERVER['HTTP_ORIGIN'] is one
     // you want to allow, and if so:
@@ -17,12 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
         // may also be using PUT, PATCH, HEAD etc
         header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
-
     if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
         header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
 
     exit(0);
 }
+
+
 
 if (defined('ENVIRONMENT'))
 {
