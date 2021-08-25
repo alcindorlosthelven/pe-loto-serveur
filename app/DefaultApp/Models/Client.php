@@ -235,11 +235,22 @@ class Client extends Model
         }
     }
 
-    public function total(){
+    public static function total(){
         $con=self::connection();
         $req="select *from client";
         $stmt=$con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
+    }
+
+    public static function saveToken($id, $token)
+    {
+        $con = self::connection();
+        $req = "update client set token=:token where id=:id";
+        $stmt = $con->prepare($req);
+        if ($stmt->execute(array(":token" => $token, ":id" => $id))) {
+            return "ok";
+        }
+        return "no";
     }
 }

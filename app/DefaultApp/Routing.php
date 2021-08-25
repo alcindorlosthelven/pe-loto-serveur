@@ -2,23 +2,24 @@
 use app\DefaultApp\DefaultApp as App;
 App::get("/", "default.index", "index");
 App::post("/", "default.index","index_post");
+App::get("info-dashboard", "default.infosDashboard", "info_dashboard");
 
 //login logout
 App::post("login","default.login");
 App::post("logout","default.logout");
-
-
 //fin login logout
-
 
 //code jeux
 App::post("code-jeux","codeJeux.add");
+App::post("ajouter-prime","codeJeux.addPrime");
+App::post("lister-prime","codeJeux.getsPrime");
 App::put("code-jeux","codeJeux.update");
 App::get("code-jeux/:id","codeJeux.get")->avec("id","[0-9]+");
 App::get("code-jeux","codeJeux.gets");
 App::delete("code-jeux/:id","codeJeux.delete")->avec("id","[0-9]+");
+App::post("ajouter-numero","codeJeux.addNumero");
+App::post("lister-numero","codeJeux.getsNumero");
 //fin code jeux autre lien
-
 
 //client
 App::post("client","client.add");
@@ -38,8 +39,9 @@ App::get("vendeur/:id","vendeur.get")->avec("id","[0-9]+");
 App::get("vendeur","vendeur.gets");
 App::delete("vendeur/:id","vendeur.delete")->avec("id","[0-9]+");
 App::get("vendeur/total","vendeur.total");
+App::post("vendeur/modifier-password","vendeur.modifierPassword");
+App::post("vendeur/save-token","vendeur.saveToken","save_token");
 //fin vendeur
-
 
 //vente
 App::post("vente","vente.add");
@@ -48,7 +50,9 @@ App::get("vente/:id","vente.get")->avec("id","[0-9]+");
 App::get("vente","vente.gets");
 App::post("eliminer-vente","vente.eliminer");
 App::post("vente/confirmerElimination","vente.confimerElimination");
-App::get("vente/par-pos-:imei","vente.getVenteParPos")->avec("imei","[0-9a-z\-]+");
+App::get("vente/par-pos-:imei","vente.getVenteParPos")->avec("imei","[0-9a-z\-\/]+");
+App::get("vente/rapport","vente.getRapport");
+App::get("vente/par-ticket-:ticket","vente.getParTicket")->avec("ticket","[0-9a-z\-]+");
 
 App::get("vente/get-motif-elimination","vente.getMotifElimination");
 App::post("vente/add-motif-elimination","vente.addMotifElimination");
@@ -60,7 +64,9 @@ App::get("vente/total-fiche-eliminer","vente.totalFicheEliminer");
 App::get("vente-vendeur-date-tirage","vente.getVenteVendeurDateTirage");
 App::get("vente-vendeur-date","vente.getVenteVendeurDate");
 App::get("liste-paris-par-date","vente.listeParisParDate");
-
+App::get("rapport-vente-vendeur","vente.getRapportVendeur");
+App::get("rapport-vente","vente.getRapport");
+App::get("statistique","vente.statistique","statistique");
 //fin vente
 
 //Tirage
@@ -125,6 +131,7 @@ App::put("branche","branche.update");
 App::get("branche/:id","branche.get")->avec("id","[0-9]+");
 App::get("branche","branche.gets");
 App::delete("branche/:id","branche.delete")->avec("id","[0-9]+");
+App::get("branche-par-reseau/:id","branche.getsParReseau")->avec("id","[0-9]+");
 //branche
 
 //lotterie
@@ -166,18 +173,21 @@ App::put("groupe","groupe.update");
 App::get("groupe/:id","groupe.get")->avec("id","[0-9]+");
 App::get("groupe","groupe.gets");
 App::delete("groupe/:id","groupe.delete")->avec("id","[0-9]+");
-App::get("groupe-par-reseau/:id","groupe.getsGroupeParReseau")->avec("id","[0-9]+");
+App::get("groupe-par-departement/:id","groupe.getsGroupeParDepartement")->avec("id","[0-9]+");
 //groupe
 
 //reseau
 App::post("reseau","reseau.add");
 App::put("reseau","reseau.update");
 App::get("reseau/:id","reseau.get")->avec("id","[0-9]+");
-App::get("reseau-par-branche/:id","reseau.getsReseauParBranche")->avec("id","[0-9]+");
+App::get("reseau-par-groupe/:id","reseau.getsReseauParGroupe")->avec("id","[0-9]+");
 App::get("reseau","reseau.gets");
 App::delete("reseau/:id","reseau.delete")->avec("id","[0-9]+");
 //reseau
 
-
-
-
+//message promotion
+App::post("message","messagePromotion.add");
+App::get("message-liste-message","messagePromotion.listeMessage");
+App::get("message-liste-promotion","messagePromotion.listePromotion");
+App::get("supprimer-message-:id","messagePromotion.delete")->avec("id","[0-9]+");
+//fin message promotion

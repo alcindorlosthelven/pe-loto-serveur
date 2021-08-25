@@ -10,9 +10,12 @@ namespace app\DefaultApp\Controlleurs;
 
 use app\DefaultApp\Models\App;
 use app\DefaultApp\Models\Client;
+use app\DefaultApp\Models\Pos;
 use app\DefaultApp\Models\TestModel;
 use app\DefaultApp\Models\Utilisateur;
 use app\DefaultApp\Models\Vendeur;
+use app\DefaultApp\Models\Vente;
+use stdClass;
 use systeme\Controlleur\Controlleur;
 
 class DefaultControlleur extends Controlleur
@@ -72,11 +75,39 @@ class DefaultControlleur extends Controlleur
 
     }
 
+
     public function token()
     {
         $OKTAISSUER = "https://dev-50587677.okta.com/oauth2/default";
         $OKTACLIENTID = "fdgdfjkjsjkjfdssfdf";
         $OKTASECRET = "ruthamar1991";
         App::obtainToken($OKTAISSUER,$OKTACLIENTID,$OKTASECRET,"");
+    }
+
+    public function infosDashboard()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        $obj=new StdClass();
+        $obj->posActif=Pos::totalActif();
+        $obj->posInactif=Pos::totalInactif();
+        $obj->pos=Pos::total();
+        $obj->fiche=Vente::total();
+        $obj->ficheValide=Vente::totalValide();
+        $obj->ficheEliminer=Vente::totalEliminer();
+        $obj->ficheEncourElimination=Vente::totalEncourElimination();
+        $obj->ficheGagnant=Vente::totalGain();
+        $obj->fichePerdant=Vente::totalPerdu();
+        $obj->clients=Client::total();
+        $obj->vendeurs=Vendeur::total();
+        $obj->utilisateurs=Utilisateur::total();
+        $obj->listeFicheEncourElimination=Vente::listeDemmandeElimination();
+
+        http_response_code(200);
+        $obj = json_encode($obj);
+        echo $obj;
     }
 }

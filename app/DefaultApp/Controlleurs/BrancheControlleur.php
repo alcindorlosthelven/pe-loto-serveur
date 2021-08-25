@@ -7,6 +7,7 @@ namespace app\DefaultApp\Controlleurs;
 use app\DefaultApp\Models\Branche;
 use app\DefaultApp\Models\Reseau;
 use systeme\Controlleur\Controlleur;
+use systeme\Model\Utilisateur;
 
 class BrancheControlleur extends Controlleur
 {
@@ -25,9 +26,21 @@ class BrancheControlleur extends Controlleur
                 return;
             }
 
-            if(empty($data->id_reseau)){
+            if(empty($data->id_supperviseur)){
                 http_response_code(503);
-                echo json_encode(array("message" => "reseau invalide"));
+                echo json_encode(array("message" => "supperviseur invalide"));
+                return;
+            }
+
+            if(empty($data->addresse)){
+                http_response_code(503);
+                echo json_encode(array("message" => "addresse invalide"));
+                return;
+            }
+
+            if(empty($data->telephone)){
+                http_response_code(503);
+                echo json_encode(array("message" => "addresse telephone"));
                 return;
             }
 
@@ -71,16 +84,27 @@ class BrancheControlleur extends Controlleur
             return;
         }
 
-        if(empty($data->id_reseau)){
+        if(empty($data->id_supperviseur)){
             http_response_code(503);
-            echo json_encode(array("message" => "reseau invalide"));
+            echo json_encode(array("message" => "supperviseur invalide"));
+            return;
+        }
+
+        if(empty($data->addresse)){
+            http_response_code(503);
+            echo json_encode(array("message" => "addresse invalide"));
+            return;
+        }
+
+        if(empty($data->telephone)){
+            http_response_code(503);
+            echo json_encode(array("message" => "addresse telephone"));
             return;
         }
 
 
         $ob=new Branche();
         $ob = $ob->findById($data->id);
-
         if ($ob == null) {
             http_response_code(404);
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}"));
@@ -121,10 +145,9 @@ class BrancheControlleur extends Controlleur
             return;
         }
 
-        $id_reseau=$ob->id_reseau;
-        $r=new Reseau();
-        $r=$r->findById($id_reseau);
-        $ob->reseau=$r;
+        $su=new \app\DefaultApp\Models\Utilisateur();
+        $su=$su->findById($ob->id_supperviseur);
+        $ob->supperviseur=$su;
 
         http_response_code(200);
         $ob=json_encode($ob);
@@ -141,11 +164,11 @@ class BrancheControlleur extends Controlleur
         $ob=new Branche();
         $liste=$ob->findAll();
         foreach ($liste as $i=>$value){
-            $id_reseau=$value->id_reseau;
-            $r=new Reseau();
-            $r=$r->findById($id_reseau);
-            $liste[$i]->reseau=$r;
+            $su=new \app\DefaultApp\Models\Utilisateur();
+            $su=$su->findById($value->id_supperviseur);
+            $liste[$i]->supperviseur=$su;
         }
+
         http_response_code(200);
         $ob=json_encode($liste);
         echo $ob;

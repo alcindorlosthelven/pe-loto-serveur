@@ -151,16 +151,14 @@ class GroupeControlleur extends Controlleur
         echo $ob;
     }
 
-    public function getsGroupeParReseau($id){
+    public function getsGroupeParDepartement($id){
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-
         $ob=new Groupe();
-        $liste=$ob->listeGroupeParReseau($id);
-
+        $liste=$ob->listeGroupeParDepartement($id);
         foreach ($liste as $i=>$value){
             $id_departement=$value->id_departement;
             $de=new Departement();

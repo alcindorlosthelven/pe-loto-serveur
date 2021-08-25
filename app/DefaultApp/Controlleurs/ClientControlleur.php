@@ -199,4 +199,19 @@ class ClientControlleur extends BaseControlleur
         echo $obj;
     }
 
+    public function saveToken(){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: POST");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        $data = json_decode(file_get_contents("php://input"));
+        $m=Client::saveToken($data->id,$data->token);
+        if($m==="ok"){
+            echo json_encode(array("message"=>"token save avec success"));
+        }else{
+            echo json_encode(array("message"=>"echek de sauvegarde"));
+        }
+    }
+
 }

@@ -8,7 +8,7 @@ use systeme\Model\Model;
 
 class Branche extends Model
 {
- public $id,$branche,$id_reseau;
+    public $id, $branche,$id_supperviseur,$addresse,$telephone,$longitude,$latitude;
 
     /**
      * @return mixed
@@ -41,5 +41,6 @@ class Branche extends Model
     {
         $this->branche = $branche;
     }
+
 
 }

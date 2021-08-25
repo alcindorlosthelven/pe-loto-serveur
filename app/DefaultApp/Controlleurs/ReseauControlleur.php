@@ -149,13 +149,12 @@ class ReseauControlleur extends Controlleur
         echo $ob;
     }
 
-    public function getsReseauParBranche($id){
+    public function getsReseauParGroupe($id){
         header("Access-Control-Allow-Origin: *");
         header("Access-Control-Allow-Headers: access");
         header("Access-Control-Allow-Methods: GET");
         header("Access-Control-Allow-Credentials: true");
         header("Content-Type: application/json; charset=UTF-8");
-
 
         if(empty($id)){
             http_response_code(503);
@@ -163,9 +162,8 @@ class ReseauControlleur extends Controlleur
             return;
         }
 
-
         $ob=new Reseau();
-        $liste=$ob->listeReseauParBranche($id);
+        $liste=$ob->listeReseauParGroupe($id);
         foreach ($liste as $i=>$l){
             $id_groupe=$l->id_groupe;
             $g=new Groupe();

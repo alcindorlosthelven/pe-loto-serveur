@@ -86,19 +86,30 @@ class Tirage extends Model
 
     public static function isTirageEncour($tirage){
         $con=self::connection();
-        $req="select *from tirage where tirage=:tirage and statut='n/a'";
+        $req="select *from tirage where tirage=:tirage and (statut='n/a' or statut='fermer')";
         $stmt=$con->prepare($req);
-
         $stmt->execute(array(
             ":tirage"=>$tirage
         ));
-
         $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
         if(count($data)>0){
             return false;
         }
-
         return true;
+    }
+
+    public static function rechercherParNom($nom){
+        $con=self::connection();
+        $req="select *from tirage where tirage=:tirage";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(
+            ":tirage"=>$nom
+        ));
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return $data[0];
+        }
+        return null;
     }
 
 }

@@ -19,6 +19,7 @@
     "ext-curl": "*",
     "ext-json": "*",
     "ixudra/curl": "6.*",
-    "ext-ctype": "*"
+    "ext-ctype": "*",
+    "edwinhoksberg/php-fcm": "^1.2"
   }
 }

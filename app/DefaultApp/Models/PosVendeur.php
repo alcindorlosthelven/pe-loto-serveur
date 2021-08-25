@@ -9,7 +9,7 @@ use systeme\Model\Model;
 class PosVendeur extends Model
 {
     protected $table = "pos_vendeur";
-    public $id, $id_vendeur, $id_pos;
+    public $id, $id_vendeur, $id_pos,$pourcentage;
 
     public static function rechercherParVendeur($id_vendeur){
         $con=self::connection();

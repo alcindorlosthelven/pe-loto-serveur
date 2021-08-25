@@ -20,10 +20,9 @@ class LotGagnantControlleur extends Controlleur
             header("Access-Control-Allow-Methods: POST");
             header("Access-Control-Max-Age: 3600");
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
             $data = json_decode(file_get_contents("php://input"));
-
             $date=date("Y-m-d");
-
             if(empty($data->tirage)){
                 http_response_code(503);
                 echo json_encode(array("message" => "Tirage invalide"));
@@ -65,59 +64,126 @@ class LotGagnantControlleur extends Controlleur
                 return;
             }
 
+            set_time_limit(10000);
+            $v = new \app\DefaultApp\Models\LotGagnant();
+            $v->remplire($data);
+            $date = date("Y-m-d");
 
-            if(Tirage::isTirageEncour($data->tirage)){
-                http_response_code(503);
-                echo json_encode(array("message" => "Imposible d'ajouter le lot gagnant, le tirage choisie est en cours"));
+            if(count(Vente::listeDemmandeElimination2())>0){
+                echo count(Vente::listeDemmandeElimination2())." fiches encours d'élimination, verifié avant de continuer";
+                return ;
+            }
+
+            if ($_POST['date'] > $date) {
+                echo "Date incorrect, la date doit etre aujourd'hui ou hier";
                 return;
             }
 
-            $obj=new LotGagnant();
-            $obj->remplire((array)$data);
+            if ($_POST['date'] == $date) {
+                if (Tirage::isTirageEncour($_POST['tirage'])) {
+                    echo "Imposible d'ajouter le lot gagnant, le tirage choisie est en cours";
+                    return;
+                }
+                $heure = date("H:i");
+                $ti = Tirage::rechercherParNom($_POST['tirage']);
+                if ($heure < $ti->heure_fermeture) {
+                    echo "Imposible d'ajouter le lot gagnant heure inccorect";
+                    return;
+                }
+            }
 
-            $borlette=array(
-              "lot1"=>$data->lot1,
-              "lot2"=>$data->lot2,
-              "lot3"=>$data->lot3
-            );
-            $loto4=array(
-              "option1"=>$data->lot2."".$data->lot3,
-              "option2"=>$data->lot1."".$data->lot2,
-              "option3"=>$data->lot1."".$data->lot3
-            );
-            $loto5=array(
-              "option1"=>$data->loto3."".$data->lot2,
-              "option2"=>$data->loto3."".$data->lot3,
-              "option3"=>substr($data->lot1,1,1)."".$data->lot2."".$data->lot3
-            );
-            $mariaj=array(
-              $data->lot2."*".$data->lot3,
-              $data->lot3."*".$data->lot2,
+            $lot1 = intval($data->lot1);
+            $lot2 = intval($data->lot2);
+            $lot3 = intval($data->lot3);
+            $loto3 = intval($data->loto3);
 
-              $data->lot1."*".$data->lot2,
-              $data->lot2."*".$data->lot1,
+            if ($lot1 > 99 || $lot1 < 0) {
+                echo "1er lot incorrect";
+                return;
+            }
+            if (strlen($lot1) == 1) {
+                $lot1 = "0" . $lot1;
+            }
 
-              $data->lot1."*".$data->lot3,
-              $data->lot3."*".$data->lot1
+            if ($lot2 > 99 || $lot2 < 0) {
+                echo "2em lot incorrect";
+                return;
+            }
+            if (strlen($lot2) == 1) {
+                $lot2 = "0" . $lot2;
+            }
+
+            if ($lot3 > 99 || $lot3 < 0) {
+                echo "3em lot incorrect";
+                return;
+            }
+            if (strlen($lot3) == 1) {
+                $lot3 = "0" . $lot3;
+            }
+            if ($loto3 > 9 || $loto3 < 0) {
+                echo "3em lot incorrect";
+                return;
+            }
+
+            $v->lot1 = $lot1;
+            $v->lot2 = $lot2;
+            $v->lot3 = $lot3;
+            $v->loto3 = $loto3;
+
+            $borlette = array(
+                "lot1" => $lot1,
+                "lot2" => $lot2,
+                "lot3" => $lot3
             );
 
-            $obj->borlette=json_encode($borlette);
-            $obj->loto4=json_encode($loto4);
-            $obj->loto5=json_encode($loto5);
-            $obj->mariaj=json_encode($mariaj);
-            $obj->date=$date;
-            $m=$obj->add();
-            if($m=="ok"){
-                Vente::updateBilletForLotGagnant($data->date,$data->tirage);
-                $obj=$obj->lastObjet();
-                $obj=$obj->toJson();
+            $loto4 = array(
+                "option1" => $lot2 . "" . $lot3,
+                "option1_inverse" => $lot3 . "" . $lot2,
+
+                "option2" => $lot1 . "" . $lot2,
+                "option2_inverse" => $lot2 . "" . $lot1,
+
+                "option3" => $lot1 . "" . $lot3,
+                "option3_inverse" => $lot3 . "" . $lot1,
+            );
+
+            $loto5 = array(
+                "option1" => $loto3 . $lot1 . "" . $lot2,
+                "option2" => $loto3 . $lot1 . "" . $lot3,
+                "option3" => substr($lot1, 1, 1) . "" . $lot2 . "" . $lot3
+            );
+
+            $mariaj = array(
+                $lot1 . "*" . $lot2,
+                $lot2 . "*" . $lot1,
+
+                $lot1 . "*" . $lot3,
+                $lot3 . "*" . $lot1,
+
+                $lot2 . "*" . $lot3,
+                $lot3 . "*" . $lot2,
+            );
+
+            $v->borlette = json_encode($borlette);
+            $v->loto4 = json_encode($loto4);
+            $v->loto5 = json_encode($loto5);
+            $v->mariaj = json_encode($mariaj);
+            $v->loto3 = $v->loto3 . "" . $v->lot1;
+            $m = $v->add();
+            if ($m == "ok") {
+                Vente::updateBilletForLotGagnant($_POST['date'], $_POST['tirage']);
+                $t = new \app\DefaultApp\Models\Tracabilite();
+                $t->action = "ajouter lot gagnant" . $v->borlette . '<br>loto 3 :' . $v->loto3;
+                $t->add();
+                $v=$v->lastObjet();
+                $v=$v->toJson();
                 http_response_code(200);
-                echo $obj;
+                echo $v;
                 return;
             }
-
             http_response_code(503);
             echo json_encode(array("message" => $m));
+
         }catch (\Exception $ex){
             http_response_code(503);
             echo json_encode(array("message" => $ex->getMessage()));
@@ -281,13 +347,7 @@ class LotGagnantControlleur extends Controlleur
 
         if(isset($_GET['date']) and isset($_GET['tirage'])){
             $obj=new LotGagnant();
-            $obj=$obj->rechercherParDateTirage($_GET['date'],$_GET['tirage']);
-            if ($obj == null) {
-                http_response_code(404);
-                echo json_encode(array("message" => "Objet non trouver"));
-                return;
-            }
-
+            $obj=$obj->rechercherParDateTirage($_GET['date'],$_GET['date2'],$_GET['tirage']);
             http_response_code(200);
             $obj=json_encode($obj);
             echo $obj;

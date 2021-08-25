@@ -25,50 +25,11 @@ class PosControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-
-            if(empty($data->id_superviseur)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id supperviseur invalide"));
-                return;
-            }
-
-            if(empty($data->id_banque)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id banque invalide"));
-                return;
-            }
-
-            if(empty($data->id_branche)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id branche invalide"));
-                return;
-            }
-
-            if(empty($data->id_reseau)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id reseau invalide"));
-                return;
-            }
-
-            if(empty($data->id_groupe)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id groupe invalide"));
-                return;
-            }
-
-            if(empty($data->id_departement)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id departement invalide"));
-                return;
-            }
-
-
             if(empty($data->imei)){
                 http_response_code(503);
                 echo json_encode(array("message" => "imei invalide"));
                 return;
             }
-
 
             $pos=new Pos();
             $pos->remplire((array)$data);
@@ -104,44 +65,6 @@ class PosControlleur extends Controlleur
             echo json_encode(array("message" => "id invalide"));
             return;
         }
-
-
-        if(empty($data->id_superviseur)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id supperviseur invalide"));
-            return;
-        }
-
-        if(empty($data->id_banque)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id banque invalide"));
-            return;
-        }
-
-        if(empty($data->id_branche)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id branche invalide"));
-            return;
-        }
-
-        if(empty($data->id_reseau)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id reseau invalide"));
-            return;
-        }
-
-        if(empty($data->id_groupe)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id groupe invalide"));
-            return;
-        }
-
-        if(empty($data->id_departement)){
-            http_response_code(503);
-            echo json_encode(array("message" => "id departement invalide"));
-            return;
-        }
-
 
         if(empty($data->imei)){
             http_response_code(503);
@@ -191,37 +114,9 @@ class PosControlleur extends Controlleur
             echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
             return;
         }
-
-        $b=new Banque();
-        $d=new Departement();
-        $br=new Branche();
-        $su=new Utilisateur();
-        $gr=new Groupe();
-        $reseau=new Reseau();
         $vendeur=new Vendeur();
-
-        $id_superviseur=$pos->id_superviseur;
-        $id_branch=$pos->id_branche;
-        $id_banque=$pos->id_banque;
-        $id_departement=$pos->id_departement;
-        $id_groupe=$pos->id_groupe;
-        $id_reseau=$pos->id_reseau;
-
-        $b=$b->findById($id_banque);
-        $br=$br->findById($id_branch);
-        $su=$su->findById($id_superviseur);
-        $d=$d->findById($id_departement);
-        $gr=$gr->findById($id_groupe);
-        $reseau=$reseau->findById($id_reseau);
         $vendeur=$vendeur->rechercherParPos($pos->id);
         $pos->vendeur=$vendeur;
-        $pos->superviseur=$su;
-        $pos->branche=$br;
-        $pos->banque=$b;
-        $pos->departement=$d;
-        $pos->groupe=$gr;
-        $pos->reseau=$reseau;
-
         http_response_code(200);
         $pos=json_encode($pos);
         echo $pos;
@@ -236,35 +131,9 @@ class PosControlleur extends Controlleur
         $pos=new Pos();
         $liste=$pos->findAll();
         foreach($liste as $i=>$value){
-            $b=new Banque();
-            $d=new Departement();
-            $br=new Branche();
-            $su=new Utilisateur();
-            $gr=new Groupe();
-            $reseau=new Reseau();
             $vendeur=new Vendeur();
-
-            $id_superviseur=$value->id_superviseur;
-            $id_branch=$value->id_branche;
-            $id_banque=$value->id_banque;
-            $id_departement=$value->id_departement;
-            $id_groupe=$value->id_groupe;
-            $id_reseau=$value->id_reseau;
-
-            $b=$b->findById($id_banque);
-            $br=$br->findById($id_branch);
-            $su=$su->findById($id_superviseur);
-            $d=$d->findById($id_departement);
-            $gr=$gr->findById($id_groupe);
-            $reseau=$reseau->findById($id_reseau);
             $vendeur=$vendeur->rechercherParPos($liste[$i]->id);
             $liste[$i]->vendeur=$vendeur;
-            $liste[$i]->superviseur=$su;
-            $liste[$i]->branche=$br;
-            $liste[$i]->banque=$b;
-            $liste[$i]->departement=$d;
-            $liste[$i]->groupe=$gr;
-            $liste[$i]->reseau=$reseau;
         }
         http_response_code(200);
         $pos=json_encode($liste);

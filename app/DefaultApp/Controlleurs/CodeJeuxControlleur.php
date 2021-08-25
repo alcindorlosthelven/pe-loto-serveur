@@ -4,7 +4,11 @@
 namespace app\DefaultApp\Controlleurs;
 
 
+use app\DefaultApp\Models\Branche;
 use app\DefaultApp\Models\CodeJeux;
+use app\DefaultApp\Models\NumeroControler;
+use app\DefaultApp\Models\Prime;
+use app\DefaultApp\Models\Vendeur;
 use systeme\Controlleur\Controlleur;
 use systeme\Model\Model;
 
@@ -186,4 +190,104 @@ class CodeJeuxControlleur extends Controlleur
 
     }
 
+    public function addPrime(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+            $id_branche=$data->id_branche;
+            $primes=json_encode($data->primes);
+            $branche=new Branche();
+            $branche=$branche->findById($id_branche);
+            $branche->prime=$primes;
+            $m=$branche->update();
+            if($m=="ok"){
+                http_response_code(200);
+                echo json_encode(array("message"=>"Fait avec success"));
+                return;
+            }
+            http_response_code(503);
+            echo json_encode(array("message" => $m));
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
+
+    public function getsPrime(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+            $id_branche=$data->id_branche;
+            $branche=new Branche();
+            $branche=$branche->findById($id_branche);
+            $liste=json_decode($branche->prime);
+            http_response_code(200);
+            $codeJeux=json_encode($liste);
+            echo $codeJeux;
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
+
+    public function addNumero(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+            $id_branche=$data->id_branche;
+            $limite_numero=json_encode($data->limite_numero);
+            $vente_general=$data->vente_generale;
+            $numero=new NumeroControler();
+            $numero->branche=$id_branche;
+            $numero->limite=$limite_numero;
+            $numero->limite_vente=$vente_general;
+            $m=$numero->add();
+            if($m=="ok"){
+                http_response_code(200);
+                echo json_encode(array("message"=>"Fait avec success"));
+                return;
+            }
+            http_response_code(503);
+            echo json_encode(array("message" => $m));
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
+
+    public function getsNumero(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+            $id_branche=$data->id_branche;
+            $codeJeux=new NumeroControler();
+            $liste=$codeJeux->lister($id_branche);
+            http_response_code(200);
+            $codeJeux=json_encode($liste);
+            echo $codeJeux;
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
 }

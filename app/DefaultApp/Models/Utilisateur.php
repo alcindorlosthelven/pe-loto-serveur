@@ -194,7 +194,7 @@ class Utilisateur extends Model
 
     }
 
-    public function total(){
+    public static function total(){
         $con=self::connection();
         $req="select *from utilisateur";
         $stmt=$con->prepare($req);

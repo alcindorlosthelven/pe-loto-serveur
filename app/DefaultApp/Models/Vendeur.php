@@ -8,11 +8,11 @@ use systeme\Model\Model;
 
 class Vendeur extends Model
 {
-    public $id,$nom,$prenom,$telephone,$sexe,$objet,$pseudo,$password,$connect;
+    public $id, $nom, $prenom, $telephone, $sexe, $objet, $pseudo, $password, $connect,$addresse,$id_branche;
 
-    public function __construct($objet="vendeur")
+    public function __construct($objet = "vendeur")
     {
-        $this->objet=$objet;
+        $this->objet = $objet;
     }
 
     /**
@@ -81,7 +81,6 @@ class Vendeur extends Model
     }
 
 
-
     /**
      * @return mixed
      */
@@ -97,7 +96,6 @@ class Vendeur extends Model
     {
         $this->sexe = $sexe;
     }
-
 
 
     /**
@@ -157,20 +155,22 @@ class Vendeur extends Model
     }
 
     /**
-     * @param mixed $telephon
+     * @param mixed $telephone
      */
-    public function setTelephon($telephon): void
+    public function setTelephone($telephone): void
     {
-        $this->telephon = $telephon;
+        $this->telephone = $telephone;
     }
 
-    public static function existe($id){
-        $cj=new Vendeur();
-        $cj=$cj->findById($id);
-        if($cj!==null){
+
+    public static function existe($id)
+    {
+        $cj = new Vendeur();
+        $cj = $cj->findById($id);
+        if ($cj !== null) {
             return true;
         }
-        return  false;
+        return false;
     }
 
     public static function setConnection($id)
@@ -182,7 +182,7 @@ class Vendeur extends Model
             $stmt = $con->prepare($req);
             if ($stmt->execute(array(
                 ":connect" => "oui",
-                ":id"=>$id
+                ":id" => $id
             ))
             ) {
                 $_SESSION['id_session'] = $id_session;
@@ -195,9 +195,9 @@ class Vendeur extends Model
         }
     }
 
-    public static function login($user_name,$password)
+    public static function login($user_name, $password)
     {
-        $password=md5($password);
+        $password = md5($password);
         try {
             $con = self::connection();
             $req = "SELECT *FROM vendeur WHERE pseudo=:pseudo AND password=:password";
@@ -208,27 +208,27 @@ class Vendeur extends Model
             ));
             $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             if (count($data) > 0) {
-                $pos_vendeur=PosVendeur::rechercherParVendeur($data[0]->id);
-                if($pos_vendeur==null){
+                $pos_vendeur = PosVendeur::rechercherParVendeur($data[0]->id);
+                if ($pos_vendeur == null) {
                     return
                         array(
-                            "message"=>"Aucun POS lié a votre compte, contacter l'administration",
-                            "statut"=>"no"
-                    );
+                            "message" => "Aucun POS lié a votre compte, contacter l'administration",
+                            "statut" => "no"
+                        );
                 }
 
-                $pos=new Pos();
-                $pos=$pos->findById($pos_vendeur->id_pos);
-                if($pos->statut !=='actif'){
+                $pos = new Pos();
+                $pos = $pos->findById($pos_vendeur->id_pos);
+                if ($pos->statut !== 'actif') {
                     return
                         array(
-                            "message"=>"POS desactiver ou inactif , contacter l'administration",
-                            "statut"=>"no"
+                            "message" => "POS desactiver ou inactif , contacter l'administration",
+                            "statut" => "no"
                         );
                 }
                 self::setConnection($data[0]->getId());
-                $data[0]->statut="ok";
-                $data[0]->pos=$pos;
+                $data[0]->statut = "ok";
+                $data[0]->pos = $pos;
                 $data[0]->setConnect("oui");
                 return $data[0];
             } else {
@@ -240,27 +240,70 @@ class Vendeur extends Model
 
     }
 
-    public function total(){
-        $con=self::connection();
-        $req="select *from vendeur";
-        $stmt=$con->prepare($req);
+    public static function total()
+    {
+        $con = self::connection();
+        $req = "select *from vendeur";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
+    public static function listerParBranche($id_branche)
+    {
+        $con = self::connection();
+        $req = "select *from vendeur where id_branche=:id_branche";
+        $stmt = $con->prepare($req);
+        $stmt->execute(array(":id_branche" => $id_branche));
+        $datas = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+        return $datas;
+    }
 
-    public function rechercherParPos($idPos){
-        $con=self::connection();
-        $req="select v.id,v.nom,v.prenom,v.sexe,v.telephone,v.pseudo,v.password,v.connect,v.objet
+    public function rechercherParPos($idPos)
+    {
+        $con = self::connection();
+        $req = "select v.id,v.nom,v.prenom,v.sexe,v.telephone,v.pseudo,v.password,v.connect,v.objet,v.id_branche
         from vendeur as v,pos_vendeur as pv ,pos where 
         v.id=pv.id_vendeur and pos.id=pv.id_pos and pos.id=:id_pos";
-        $stmt=$con->prepare($req);
-        $stmt->execute(array(":id_pos"=>$idPos));
-        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
-        if(count($data)>0){
+        $stmt = $con->prepare($req);
+        $stmt->execute(array(":id_pos" => $idPos));
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+        if (count($data) > 0) {
+            $id_branche=$data[0]->id_branche;
+            $branche=new Branche();
+            $branche=$branche->findById($id_branche);
+            $data[0]->branche=$branche;
             return $data[0];
         }
         return null;
     }
+
+    public static function listeToken()
+    {
+        $con = self::connection();
+        $req = "SELECT token FROM vendeur WHERE token <> NULL OR token <> '' OR token <> 'null'";
+        $stmt = $con->prepare($req);
+        $stmt->execute();
+        $listeToken = array();
+        $data = $stmt->fetchAll();
+        foreach ($data as $d) {
+            if (strlen($d[0]) > 15) {
+                $listeToken[] = $d[0];
+            }
+        }
+        return $listeToken;
+    }
+
+    public static function saveToken($id, $token)
+    {
+        $con = self::connection();
+        $req = "update vendeur set token=:token where id=:id";
+        $stmt = $con->prepare($req);
+        if ($stmt->execute(array(":token" => $token, ":id" => $id))) {
+            return "ok";
+        }
+        return "no";
+    }
+
 
 }

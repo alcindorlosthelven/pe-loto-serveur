@@ -188,6 +188,10 @@ class Application extends Session
 
     public static function formatComptable($p)
     {
+        if(stristr($p,"-")){
+            $a=true;
+            $p=str_replace("-","",$p);
+        }
         if ($p == "") {
             $p = 0;
         }
@@ -195,7 +199,11 @@ class Application extends Session
         $r = "#^[0-9]*.?[0-9]+$#";
         if (preg_match($r, $p)) {
             $p = number_format($p, 2, '.', ',');
-            return $p;
+            if(isset($a)){
+                return "-".$p;
+            }else {
+                return $p;
+            }
         } else {
             throw new \Exception("Format incorrect pour prix ou cout");
         }

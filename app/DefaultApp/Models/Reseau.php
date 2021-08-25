@@ -10,12 +10,11 @@ class Reseau extends Model
 {
     public $id,$nom,$id_groupe;
 
-    public function listeReseauParBranche($id_branche){
+    public function listeReseauParGroupe($id_groupe){
         $con=self::connection();
-        $req="select reseau.id,reseau.nom,reseau.id_groupe from reseau,branche where branche.id=:id_branche and
-        reseau.id=branche.id_reseau";
+        $req="select *from reseau where id_groupe=:id_groupe";
         $stmt=$con->prepare($req);
-        $stmt->execute(array(":id_branche"=>$id_branche));
+        $stmt->execute(array(":id_groupe"=>$id_groupe));
         return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
     }
 

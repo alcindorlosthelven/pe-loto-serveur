@@ -5,12 +5,19 @@ namespace app\DefaultApp\Controlleurs;
 
 //+2295 1576 922
 
+use app\DefaultApp\Models\BouleBloquer;
+use app\DefaultApp\Models\Branche;
 use app\DefaultApp\Models\Client;
 use app\DefaultApp\Models\CodeJeux;
 use app\DefaultApp\Models\MotifElimination;
+use app\DefaultApp\Models\NumeroControler;
+use app\DefaultApp\Models\Pos;
+use app\DefaultApp\Models\Succursal;
+use app\DefaultApp\Models\Tirage;
 use app\DefaultApp\Models\Vendeur;
 use app\DefaultApp\Models\Vente;
 use app\DefaultApp\Models\VenteEliminer;
+use stdClass;
 use systeme\Controlleur\Controlleur;
 
 class VenteControlleur extends Controlleur
@@ -24,6 +31,8 @@ class VenteControlleur extends Controlleur
             header("Access-Control-Max-Age: 3600");
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
+
+            $bouleBloquer = new NumeroControler();
 
             if (empty($data->paris) or count($data->paris) <= 0) {
                 cj:
@@ -44,19 +53,19 @@ class VenteControlleur extends Controlleur
                 if ($cl != null) {
                     $data->id_client = $cl->getId();
                 } else {
-                    $cl=new Client();
-                    $cl->id=1;
-                    $cl->nom="default";
-                    $cl->prenom="client";
-                    $cl->sexe="m";
-                    $cl->telephone="00000000";
-                    $cl->pseudo="defaultclient";
-                    $cl->connect="non";
-                    $cl->objet="client";
-                    $m=$cl->add();
-                    if($m=="ok"){
-                        $data->id_client=1;
-                    }else{
+                    $cl = new Client();
+                    $cl->id = 1;
+                    $cl->nom = "default";
+                    $cl->prenom = "client";
+                    $cl->sexe = "m";
+                    $cl->telephone = "00000000";
+                    $cl->pseudo = "defaultclient";
+                    $cl->connect = "non";
+                    $cl->objet = "client";
+                    $m = $cl->add();
+                    if ($m == "ok") {
+                        $data->id_client = 1;
+                    } else {
                         http_response_code(503);
                         echo json_encode(array("message" => "id client invalide"));
                         return;
@@ -106,16 +115,47 @@ class VenteControlleur extends Controlleur
                 return;
             }
 
-            /*$cjeux=false;
-            foreach ($data->paris as $pari){
-                $cjeux=CodeJeux::existe($pari->codeJeux);
-            }*/
+            if (!Tirage::isTirageEncour($data->tirage)) {
+                http_response_code(503);
+                echo json_encode(array("message" => "Impossible d'ajouter le fiche , tirage fermé"));
+                return;
+            }
+
+            $vend = new Vendeur();
+            $vend = $vend->findById($data->id_vendeur);
+
+            $mpbloquer="";
+            foreach ($data->paris as $pa){
+                if($bouleBloquer->existe($pa->pari,$vend->id_branche)){
+                    $mpbloquer.=$pa->pari." , ";
+                }
+            }
+            if($mpbloquer!=""){
+                $mpbloquer="Imposible d'effectuer la vente,".$mpbloquer."bloqué par le système";
+                http_response_code(503);
+                echo json_encode(array("message" => $mpbloquer));
+                return;
+            }
+
+            $mplimite=$bouleBloquer->limite($vend->id_branche, $data->paris);
+            if ($mplimite != "") {
+                http_response_code(503);
+                echo json_encode(array("message" => $mplimite));
+                return;
+            }
+            $pos = Pos::rechercherParImei($data->tid);
+            if ($pos->statut !== "actif") {
+                http_response_code(503);
+                echo json_encode(array("message" => "Impossible d'ajouter le fiche , pos desactiver par le systeme"));
+                return;
+            }
 
             $cjeux = true;
             if ($cjeux === true) {
                 $paris = json_encode($data->paris);
                 $obj = new Vente();
                 $obj->remplire((array)$data);
+
                 $obj->setParis($paris);
                 $obj->setEliminer("non");
                 $obj->setDate(date("Y-m-d"));
@@ -123,11 +163,16 @@ class VenteControlleur extends Controlleur
                 $obj->gain = 'n/a';
                 $obj->total_gain = '0';
                 $obj->payer = 'n/a';
+                $obj->id_pos = $pos->id;
+                $obj->id_branche=$vend->id_branche;
 
+                $b=new Branche();
+                $b=$b->findById($vend->id_branche);
+                $obj->id_superviseur=$b->id_supperviseur;
                 $m = $obj->add();
                 if ($m == "ok") {
                     $obj = $obj->lastObjet();
-                    $obj->message = "enregistrer avec success";
+                    $obj->message = "Enregistrer avec success";
                     $obj = $obj->toJson();
                     http_response_code(200);
                     echo $obj;
@@ -246,6 +291,44 @@ class VenteControlleur extends Controlleur
         echo $obj;
     }
 
+    public function getParTicket($ticket)
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        if (empty($ticket)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no ticket invalide"));
+            return;
+        }
+
+        $obj = new Vente();
+        if(isset($_GET['id_vendeur'])){
+            $obj = $obj->findByTicketVendeur($ticket,$_GET['id_vendeur']);
+        }else{
+            $obj = $obj->findByTicket($ticket);
+        }
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$ticket}"));
+            return;
+        }
+
+        $ve = VenteEliminer::rechercheParIdVente($obj->getId());
+
+        if ($ve !== null) {
+            $obj->venteEliminer = $ve;
+        }
+
+        http_response_code(200);
+        $obj = json_encode($obj);
+        echo $obj;
+    }
+
     public function gets()
     {
         header("Access-Control-Allow-Origin: *");
@@ -260,7 +343,11 @@ class VenteControlleur extends Controlleur
             if (isset($_GET['eliminer'])) {
                 $liste = $obj->listeEliminer($id_vendeur);
             } elseif (isset($_GET['non_eliminer'])) {
-                $liste = $obj->listeNonEliminer($id_vendeur);
+                if (isset($_GET['date1']) and isset($_GET['date2'])) {
+                    $liste = $obj->listeNonEliminer($id_vendeur, $_GET['date1'], $_GET['date2']);
+                } else {
+                    $liste = $obj->listeNonEliminer($id_vendeur);
+                }
             } elseif (isset($_GET['demmande_elimination'])) {
                 $liste = $obj->listeDemmandeElimination($id_vendeur);
             } else {
@@ -296,11 +383,11 @@ class VenteControlleur extends Controlleur
 
             $paris = json_decode($value->paris);
             //parcourir list des paris pour voir les gagnant
-            $montant=0;
+            $montant = 0;
             foreach ($paris as $i => $p) {
                 $montant += $p->mise;
             }
-            $liste[$index]->montant=$montant;
+            $liste[$index]->montant = $montant;
         }
 
         http_response_code(200);
@@ -340,11 +427,11 @@ class VenteControlleur extends Controlleur
 
                 $paris = json_decode($value->paris);
                 //parcourir list des paris pour voir les gagnant
-                $montant=0;
+                $montant = 0;
                 foreach ($paris as $i => $p) {
                     $montant += $p->mise;
                 }
-                $liste[$index]->montant=$montant;
+                $liste[$index]->montant = $montant;
 
             }
 
@@ -393,11 +480,11 @@ class VenteControlleur extends Controlleur
 
                 $paris = json_decode($value->paris);
                 //parcourir list des paris pour voir les gagnant
-                $montant=0;
+                $montant = 0;
                 foreach ($paris as $i => $p) {
                     $montant += $p->mise;
                 }
-                $liste[$index]->montant=$montant;
+                $liste[$index]->montant = $montant;
             }
 
             http_response_code(200);
@@ -442,11 +529,11 @@ class VenteControlleur extends Controlleur
 
             $paris = json_decode($value->paris);
             //parcourir list des paris pour voir les gagnant
-            $montant=0;
+            $montant = 0;
             foreach ($paris as $i => $p) {
                 $montant += $p->mise;
             }
-            $liste[$index]->montant=$montant;
+            $liste[$index]->montant = $montant;
         }
 
         http_response_code(200);
@@ -532,6 +619,7 @@ class VenteControlleur extends Controlleur
 
     }
 
+
     public function confimerElimination()
     {
         header("Access-Control-Allow-Origin: *");
@@ -546,36 +634,30 @@ class VenteControlleur extends Controlleur
             return;
         }
 
-        $vente = new Vente();
-        $obj = new VenteEliminer();
-        $obj = $obj->findById($data->id_vente_eliminer);
-
-        if ($obj == null) {
-            http_response_code(404);
-            echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id_vente_eliminer}"));
-            return;
-        }
-
-        $vente = $vente->findById($obj->id_vente);
-        $obj->setStatus("terminer");
-        $vente->setEliminer("oui");
-
-        $mup = $obj->update();
-        if ($mup == "ok") {
-            $mv = $vente->update();
-            if ($mv == "ok") {
+        if (isset($_GET['eliminer'])) {
+            $id = $data->id_vente_eliminer;
+            $venteEl = new \app\DefaultApp\Models\VenteEliminer();
+            $venteEl = $venteEl->findById($id);
+            if ($venteEl != null) {
+                $vnel = new \app\DefaultApp\Models\Vente();
+                $vnel = $vnel->findById($venteEl->id_vente);
+                $vnel->eliminer = 'oui';
+                $vnel->update();
+                $venteEl->deleteById($id);
                 http_response_code(200);
-                $obj = $obj->toJson();
-                echo $obj;
+                echo json_encode(array("message"=>"éliminé avec success"));
                 return;
             }
-            http_response_code(503);
-            echo json_encode(array("message" => $mv));
-            return;
         }
 
-        http_response_code(503);
-        echo json_encode(array("message" => $mup));
+        if(isset($_GET['annuler'])){
+            $id=$_GET['annuler'];
+            $v=new VenteEliminer();
+            $v=$v->findById($id);
+            $v->deleteById($id);
+            http_response_code(200);
+            echo json_encode(array("message"=>"élimination annulé avec success"));
+        }
 
     }
 
@@ -779,7 +861,171 @@ class VenteControlleur extends Controlleur
         header("Content-Type: application/json; charset=UTF-8");
 
         http_response_code(200);
-        $liste = Vente::listeParisParDate($_GET['date1'],$_GET['date2'],$_GET['tirage'],$_GET['type_jeux']);
+        $liste = Vente::listeParisParDate($_GET['date1'], $_GET['date2'], $_GET['tirage'], $_GET['type_jeux']);
         echo json_encode($liste);
     }
+
+    public function lister()
+    {
+        $variables = [];
+        $variables['titre'] = "liste des ventes";
+        $this->render("vente/lister", $variables);
+    }
+
+    public function single($id)
+    {
+        $variables = array();
+        $variables['titre'] = "fiche - $id";
+        if (isset($_GET['eliminer'])) {
+            $id = $_GET['eliminer'];
+            $venteEl = new \app\DefaultApp\Models\VenteEliminer();
+            $venteEl = $venteEl->findById($id);
+            if ($venteEl != null) {
+                $vnel = new \app\DefaultApp\Models\Vente();
+                $vnel = $vnel->findById($venteEl->id_vente);
+                $vnel->eliminer = 'oui';
+                $vnel->update();
+                $venteEl->deleteById($id);
+                $t = new \app\DefaultApp\Models\Tracabilite();
+                $t->action = "Eliminé fiche " . $vnel->id;
+                $t->add();
+                ?>
+                <script>alert('fait avec success');
+                    location.href = "fiche-<?php echo $vnel->id ?>"</script>
+                <?php
+            }
+        }
+
+        if (isset($_GET['annuler'])) {
+            $id = $_GET['annuler'];
+            $v = new VenteEliminer();
+            $v = $v->findById($id);
+            $id_Ventte = $v->id_vente;
+            $v->deleteById($id);
+            $t = new \app\DefaultApp\Models\Tracabilite();
+            $t->action = "annuler eliminatio fiche " . $id;
+            $t->add();
+            ?>
+            <script>alert('fait avec success');
+                location.href = "fiche-<?php echo $id_Ventte ?>"</script>
+            <?php
+        }
+
+        $v = new Vente();
+        $v = $v->findById($id);
+        $variables['vente'] = $v;
+        $this->render("vente/single", $variables);
+    }
+
+    public function venteParPos()
+    {
+        $variables = [];
+        $variables['titre'] = "Vente par pos";
+        $this->render("vente/par_pos", $variables);
+    }
+
+    public function venteParPari()
+    {
+        $variables = [];
+        $variables['titre'] = "Vente par pari";
+        $this->render("vente/par_pari", $variables);
+    }
+
+    public function fermetureVente()
+    {
+        $variables = [];
+        $variables['titre'] = "Fermeture vente";
+        $this->render("vente/fermeture", $variables);
+    }
+
+    public function getRapport()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        $date1=$_GET['date1'];
+        $date2=$_GET['date2'];
+        $tirage=$_GET['tirage'];
+        $branche=$_GET['branche'];
+        $obj=Vente::getRapport($date1,$date2,$tirage,$branche);
+        http_response_code(200);
+        $obj = json_encode($obj);
+        echo $obj;
+    }
+
+    public function getRapportVendeur()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $id_vendeur=$_GET['id_vendeur'];
+        $date1=$_GET['date1'];
+        $date2=$_GET['date2'];
+        $tirage=$_GET['tirage'];
+
+        $obj=Vente::getRapportVendeur($id_vendeur,$tirage,$date1,$date2);
+        http_response_code(200);
+        $obj = json_encode($obj);
+        echo $obj;
+    }
+
+    public function statistique()
+    {
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: GET");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $date1=$_GET['date1'];
+        $date2=$_GET['date2'];
+        $tirage=$_GET['tirage'];
+
+        $listeParis = \app\DefaultApp\Models\Vente::listeParisParDate($date1, $date2, $tirage);
+        $listeParis1 = array();
+        function inTableau($obj, $tableau)
+        {
+            foreach ($tableau as $i => $value) {
+                if ($obj->pari == $value->pari) {
+                    return $i;
+                }
+            }
+            return -1;
+        }
+
+        foreach ($listeParis as $p) {
+            if (explode(":", $p->codeJeux)[0] != '44') {
+                $obj = new StdClass();
+                $obj->codeJeux = explode(":", $p->codeJeux)[1];
+                $obj->pari = $p->pari;
+                $obj->mise = $p->mise;
+                $obj->quantite = 1;
+                $obj->minimum = $p->mise;
+                $obj->maximum = $p->mise;
+                $it = inTableau($obj, $listeParis1);
+                if ($it == -1) {
+                    array_push($listeParis1, $obj);
+                } else {
+                    if ($listeParis1[$it]->minimum > $obj->mise) {
+                        $listeParis1[$it]->minimum = $obj->mise;
+                    }
+                    if ($listeParis1[$it]->maximum < $obj->mise) {
+                        $listeParis1[$it]->maximum = $obj->mise;
+                    }
+                    $listeParis1[$it]->quantite = $listeParis1[$it]->quantite + 1;
+                    $listeParis1[$it]->mise = $listeParis1[$it]->mise + $obj->mise;
+                }
+            }
+        }
+        sort($listeParis1);
+        http_response_code(200);
+        echo json_encode($listeParis1);
+
+    }
+
 }
