@@ -20,9 +20,9 @@ class LotGagnantControlleur extends Controlleur
             header("Access-Control-Allow-Methods: POST");
             header("Access-Control-Max-Age: 3600");
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
             $data = json_decode(file_get_contents("php://input"));
             $date=date("Y-m-d");
+            http_response_code(503);
             if(empty($data->tirage)){
                 http_response_code(503);
                 echo json_encode(array("message" => "Tirage invalide"));
@@ -66,69 +66,42 @@ class LotGagnantControlleur extends Controlleur
 
             set_time_limit(10000);
             $v = new \app\DefaultApp\Models\LotGagnant();
-            $v->remplire($data);
             $date = date("Y-m-d");
 
             if(count(Vente::listeDemmandeElimination2())>0){
-                echo count(Vente::listeDemmandeElimination2())." fiches encours d'élimination, verifié avant de continuer";
+                echo json_encode(array("message" => count(Vente::listeDemmandeElimination2())." fiches encours d'élimination, verifié avant de continuer"));
                 return ;
             }
 
-            if ($_POST['date'] > $date) {
-                echo "Date incorrect, la date doit etre aujourd'hui ou hier";
+            if ($data->date > $date) {
+                echo json_encode(array("message"=>"Date incorrect, la date doit etre aujourd'hui ou hier"));
                 return;
             }
 
-            if ($_POST['date'] == $date) {
-                if (Tirage::isTirageEncour($_POST['tirage'])) {
-                    echo "Imposible d'ajouter le lot gagnant, le tirage choisie est en cours";
+            if ($data->date == $date) {
+                if (Tirage::isTirageEncour($data->tirage)) {
+                    echo json_encode(array("message"=>"Imposible d'ajouter le lot gagnant, le tirage choisie est en cours"));
                     return;
                 }
                 $heure = date("H:i");
-                $ti = Tirage::rechercherParNom($_POST['tirage']);
+                $ti = Tirage::rechercherParNom($data->tirage);
                 if ($heure < $ti->heure_fermeture) {
-                    echo "Imposible d'ajouter le lot gagnant heure inccorect";
+                    echo json_encode(array("message"=>"Imposible d'ajouter le lot gagnant heure inccorect"));
                     return;
                 }
             }
 
-            $lot1 = intval($data->lot1);
-            $lot2 = intval($data->lot2);
-            $lot3 = intval($data->lot3);
-            $loto3 = intval($data->loto3);
-
-            if ($lot1 > 99 || $lot1 < 0) {
-                echo "1er lot incorrect";
-                return;
-            }
-            if (strlen($lot1) == 1) {
-                $lot1 = "0" . $lot1;
-            }
-
-            if ($lot2 > 99 || $lot2 < 0) {
-                echo "2em lot incorrect";
-                return;
-            }
-            if (strlen($lot2) == 1) {
-                $lot2 = "0" . $lot2;
-            }
-
-            if ($lot3 > 99 || $lot3 < 0) {
-                echo "3em lot incorrect";
-                return;
-            }
-            if (strlen($lot3) == 1) {
-                $lot3 = "0" . $lot3;
-            }
-            if ($loto3 > 9 || $loto3 < 0) {
-                echo "3em lot incorrect";
-                return;
-            }
+            $lot1=$data->lot1;
+            $lot2=$data->lot2;
+            $lot3=$data->lot3;
+            $loto3=$data->loto3;
 
             $v->lot1 = $lot1;
             $v->lot2 = $lot2;
             $v->lot3 = $lot3;
             $v->loto3 = $loto3;
+            $v->date=$data->date;
+            $v->tirage=$data->tirage;
 
             $borlette = array(
                 "lot1" => $lot1,
@@ -171,9 +144,168 @@ class LotGagnantControlleur extends Controlleur
             $v->loto3 = $v->loto3 . "" . $v->lot1;
             $m = $v->add();
             if ($m == "ok") {
-                Vente::updateBilletForLotGagnant($_POST['date'], $_POST['tirage']);
+                Vente::updateBilletForLotGagnant($data->date, $data->tirage);
                 $t = new \app\DefaultApp\Models\Tracabilite();
                 $t->action = "ajouter lot gagnant" . $v->borlette . '<br>loto 3 :' . $v->loto3;
+                $t->add();
+                $v=$v->lastObjet();
+                $v=$v->toJson();
+                http_response_code(200);
+                echo $v;
+                return;
+            }
+
+            http_response_code(503);
+            echo json_encode(array("message" => $m));
+
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
+
+    public function update(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+            $date=date("Y-m-d");
+            http_response_code(503);
+            if(empty($data->id)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Id invalide"));
+                return;
+            }
+
+            if(empty($data->tirage)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Tirage invalide"));
+                return;
+            }
+
+            if(empty($data->lot1)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Lot1 invalide"));
+                return;
+            }
+
+            if(strlen($data->lot1)==1){
+                $data->lot1="0".$data->lot1;
+            }
+
+            if(empty($data->lot2)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Lot2 invalide"));
+                return;
+            }
+
+            if(strlen($data->lot2)==1){
+                $data->lot2="0".$data->lot2;
+            }
+
+            if(empty($data->lot3)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Lot3 invalide"));
+                return;
+            }
+            if(strlen($data->lot3)==1){
+                $data->lot3="0".$data->lot3;
+            }
+
+            if(empty($data->loto3)){
+                http_response_code(503);
+                echo json_encode(array("message" => "Loto3 invalide"));
+                return;
+            }
+
+            set_time_limit(10000);
+            $v = new \app\DefaultApp\Models\LotGagnant();
+            $date = date("Y-m-d");
+
+            if(count(Vente::listeDemmandeElimination2())>0){
+                echo json_encode(array("message" => count(Vente::listeDemmandeElimination2())." fiches encours d'élimination, verifié avant de continuer"));
+                return ;
+            }
+
+            if ($data->date > $date) {
+                echo json_encode(array("message"=>"Date incorrect, la date doit etre aujourd'hui ou hier"));
+                return;
+            }
+
+            if ($data->date == $date) {
+                if (Tirage::isTirageEncour($data->tirage)) {
+                    echo json_encode(array("message"=>"Imposible d'ajouter le lot gagnant, le tirage choisie est en cours"));
+                    return;
+                }
+                $heure = date("H:i");
+                $ti = Tirage::rechercherParNom($data->tirage);
+                if ($heure < $ti->heure_fermeture) {
+                    echo json_encode(array("message"=>"Imposible d'ajouter le lot gagnant heure inccorect"));
+                    return;
+                }
+            }
+
+            $lot1=$data->lot1;
+            $lot2=$data->lot2;
+            $lot3=$data->lot3;
+            $loto3=$data->loto3;
+
+            $v->lot1 = $lot1;
+            $v->lot2 = $lot2;
+            $v->lot3 = $lot3;
+            $v->loto3 = $loto3;
+            $v->date=$data->date;
+            $v->tirage=$data->tirage;
+            $v->id=$data->id;
+
+            $borlette = array(
+                "lot1" => $lot1,
+                "lot2" => $lot2,
+                "lot3" => $lot3
+            );
+
+            $loto4 = array(
+                "option1" => $lot2 . "" . $lot3,
+                "option1_inverse" => $lot3 . "" . $lot2,
+
+                "option2" => $lot1 . "" . $lot2,
+                "option2_inverse" => $lot2 . "" . $lot1,
+
+                "option3" => $lot1 . "" . $lot3,
+                "option3_inverse" => $lot3 . "" . $lot1,
+            );
+
+            $loto5 = array(
+                "option1" => $loto3 . $lot1 . "" . $lot2,
+                "option2" => $loto3 . $lot1 . "" . $lot3,
+                "option3" => substr($lot1, 1, 1) . "" . $lot2 . "" . $lot3
+            );
+
+            $mariaj = array(
+                $lot1 . "*" . $lot2,
+                $lot2 . "*" . $lot1,
+
+                $lot1 . "*" . $lot3,
+                $lot3 . "*" . $lot1,
+
+                $lot2 . "*" . $lot3,
+                $lot3 . "*" . $lot2,
+            );
+
+            $v->borlette = json_encode($borlette);
+            $v->loto4 = json_encode($loto4);
+            $v->loto5 = json_encode($loto5);
+            $v->mariaj = json_encode($mariaj);
+            $v->loto3 = $v->loto3 . "" . $v->lot1;
+            $m = $v->update();
+            if ($m == "ok") {
+                Vente::updateBilletForLotGagnantModifier($data->date, $data->tirage);
+                $t = new \app\DefaultApp\Models\Tracabilite();
+                $t->action = "modifier lot gagnant" . $v->borlette . '<br>loto 3 :' . $v->loto3;
                 $t->add();
                 $v=$v->lastObjet();
                 $v=$v->toJson();
@@ -189,80 +321,6 @@ class LotGagnantControlleur extends Controlleur
             echo json_encode(array("message" => $ex->getMessage()));
         }
 
-    }
-
-    public function update(){
-        header("Access-Control-Allow-Origin: *");
-        header("Content-Type: application/json; charset=UTF-8");
-        header("Access-Control-Allow-Methods: PUT");
-        header("Access-Control-Max-Age: 3600");
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
-
-        $data = json_decode(file_get_contents("php://input"));
-
-        if(empty($data->id)){
-                http_response_code(503);
-                echo json_encode(array("message" => "id invalide"));
-                return;
-            }
-
-        if(empty($data->date)){
-            http_response_code(503);
-            echo json_encode(array("message" => "Date invalide"));
-            return;
-        }
-
-        if(empty($data->tirage)){
-            http_response_code(503);
-            echo json_encode(array("message" => "Tirage invalide"));
-            return;
-        }
-
-        if(empty($data->lot1)){
-            http_response_code(503);
-            echo json_encode(array("message" => "Lot1 invalide"));
-            return;
-        }
-
-        if(empty($data->lot2)){
-            http_response_code(503);
-            echo json_encode(array("message" => "Lot2 invalide"));
-            return;
-        }
-
-        if(empty($data->lot3)){
-            http_response_code(503);
-            echo json_encode(array("message" => "Lot3 invalide"));
-            return;
-        }
-
-        if(empty($data->loto3)){
-            http_response_code(503);
-            echo json_encode(array("message" => "Loto3 invalide"));
-            return;
-        }
-
-        $obj=new LotGagnant();
-        $obj = $obj->findById($data->id);
-
-        if ($obj == null) {
-            http_response_code(404);
-            echo json_encode(array("message" => "Objet non trouver pour l'id : {$data->id}"));
-            return;
-        }
-
-        $obj->remplire((array)$data);
-        $m=$obj->update();
-        if($m==="ok"){
-            Vente::updateBilletForLotGagnant($data->date,$data->tirage);
-            $codeJeux=json_encode($obj);
-            http_response_code(200);
-            echo $codeJeux;
-            return;
-        }
-
-        http_response_code(503);
-        echo json_encode(array("message" => $m));
     }
 
     public function get($id){

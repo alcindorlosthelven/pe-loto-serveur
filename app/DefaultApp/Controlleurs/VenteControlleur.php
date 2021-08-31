@@ -357,7 +357,11 @@ class VenteControlleur extends Controlleur
             if (isset($_GET['eliminer'])) {
                 $liste = $obj->listeEliminer();
             } elseif (isset($_GET['non_eliminer'])) {
-                $liste = $obj->listeNonEliminer();
+                if(isset($_GET['date1']) and isset($_GET['date2'])){
+                    $liste=$obj->listeNonEliminer("",$_GET['date1'],$_GET['date1']);
+                }else {
+                    $liste = $obj->listeNonEliminer();
+                }
             } elseif (isset($_GET['demmande_elimination'])) {
                 $liste = $obj->listeDemmandeElimination();
             } else {
@@ -619,7 +623,6 @@ class VenteControlleur extends Controlleur
 
     }
 
-
     public function confimerElimination()
     {
         header("Access-Control-Allow-Origin: *");
@@ -635,6 +638,7 @@ class VenteControlleur extends Controlleur
         }
 
         if (isset($_GET['eliminer'])) {
+            a:
             $id = $data->id_vente_eliminer;
             $venteEl = new \app\DefaultApp\Models\VenteEliminer();
             $venteEl = $venteEl->findById($id);
@@ -648,15 +652,15 @@ class VenteControlleur extends Controlleur
                 echo json_encode(array("message"=>"éliminé avec success"));
                 return;
             }
-        }
-
-        if(isset($_GET['annuler'])){
+        }elseif(isset($_GET['annuler'])){
             $id=$_GET['annuler'];
             $v=new VenteEliminer();
             $v=$v->findById($id);
             $v->deleteById($id);
             http_response_code(200);
             echo json_encode(array("message"=>"élimination annulé avec success"));
+        }else{
+            goto a;
         }
 
     }

@@ -10,8 +10,8 @@ use systeme\Model\Model;
 class Vente extends Model
 {
 
-    public $id,$no_ticket,$id_client,$id_vendeur,$ref_pos,$tid,$sequence,$serial,$date,$heure,$paris,$tirage,$eliminer;
-    public $gain,$total_gain,$payer,$id_branche,$id_superviseur,$id_pos;
+    public $id, $no_ticket, $id_client, $id_vendeur, $ref_pos, $tid, $sequence, $serial, $date, $heure, $paris, $tirage, $eliminer;
+    public $gain, $total_gain, $payer, $id_branche, $id_superviseur, $id_pos;
 
     /**
      * @return mixed
@@ -44,7 +44,6 @@ class Vente extends Model
     {
         $this->eliminer = $eliminer;
     }
-
 
 
     public function getParis()
@@ -251,201 +250,216 @@ class Vente extends Model
         return null;
     }
 
-    public function listeParis(){
-        $ps=json_decode($this->paris);
-        foreach ($ps as $i=>$value){
-            $ps[$i]->date=$this->date;
-            $ps[$i]->tirage=$this->tirage;
+    public function listeParis()
+    {
+        $ps = json_decode($this->paris);
+        foreach ($ps as $i => $value) {
+            $ps[$i]->date = $this->date;
+            $ps[$i]->tirage = $this->tirage;
         }
         return $ps;
     }
 
-    public function findByCritere($no_ticket,$tid,$serial,$tirage,$id_vendeur){
-        $con=self::connection();
-        $req="select *from vente where no_ticket=:no_ticket and tid=:tid and serial=:serial and tirage=:tirage and id_vendeur=:id_vendeur
+    public function findByCritere($no_ticket, $tid, $serial, $tirage, $id_vendeur)
+    {
+        $con = self::connection();
+        $req = "select *from vente where no_ticket=:no_ticket and tid=:tid and serial=:serial and tirage=:tirage and id_vendeur=:id_vendeur
         and tire<>'oui'";
-        $stmt=$con->prepare($req);
-        $stmt->execute(array(":no_ticket"=>$no_ticket,":tid"=>$tid,":serial"=>$serial,":tirage"=>$tirage,":id_vendeur"=>$id_vendeur));
-        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
-        if(count($data)>0){
+        $stmt = $con->prepare($req);
+        $stmt->execute(array(":no_ticket" => $no_ticket, ":tid" => $tid, ":serial" => $serial, ":tirage" => $tirage, ":id_vendeur" => $id_vendeur));
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+        if (count($data) > 0) {
             return $data[0];
         }
         return null;
     }
 
-    public function listeEliminer($id_vendeur=""){
-        $con=self::connection();
-        if($id_vendeur=="") {
+    public function listeEliminer($id_vendeur = "")
+    {
+        $con = self::connection();
+        if ($id_vendeur == "") {
             $req = "select *from vente where eliminer='oui'";
-        }else{
+        } else {
             $req = "select *from vente where eliminer='oui' and id_vendeur='{$id_vendeur}'";
         }
-
-        $stmt=$con->prepare($req);
+        $stmt = $con->prepare($req);
         $stmt->execute();
-        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
         return $data;
     }
 
-    public function listeNonEliminer($id_vendeur=""){
-        $con=self::connection();
-        if($id_vendeur==""){
-            $req = "select *from vente where eliminer='non'";
-        }else {
-            $req = "select *from vente where eliminer='non' and id_vendeur='{$id_vendeur}'";
+    public function listeNonEliminer($id_vendeur = "", $date1 = "", $date2 = "")
+    {
+        $con = self::connection();
+        if ($id_vendeur == "") {
+            if ($date1 == '') {
+                $req = "select *from vente where eliminer='non'";
+            } else {
+                $req = "select *from vente where eliminer='non' and date between '{$date1}' and '{$date2}'";
+            }
+        } else {
+            if($date1=='') {
+                $req = "select *from vente where eliminer='non' and id_vendeur='{$id_vendeur}'";
+            }else{
+                $req = "select *from vente where eliminer='non' and id_vendeur='{$id_vendeur}' and date between '{$date1}' and '{$date2}'";
+            }
         }
-        $stmt=$con->prepare($req);
+        $stmt = $con->prepare($req);
         $stmt->execute();
-        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
         return $data;
     }
 
-    public static function listeDemmandeElimination($id_vendeur=""){
-        $con=self::connection();
-        if($id_vendeur=="") {
+    public static function listeDemmandeElimination($id_vendeur = "")
+    {
+        $con = self::connection();
+        if ($id_vendeur == "") {
             $req = "select vente.id,vente.id_vendeur,vente.id_client,vente.paris,vente.tirage,vente.no_ticket,vente.ref_pos,
         vente.tid,vente.sequence,vente.serial,vente.date,vente.heure,vente.eliminer,
         vente_eliminer.id as 'id_vente_eliminer' , vente_eliminer.motif,vente_eliminer.status
         from vente,vente_eliminer where vente.id=vente_eliminer.id_vente and vente.eliminer='non' and vente_eliminer.status='en cours'
         and vente.tire<>'oui'";
-        }else{
+        } else {
             $req = "select vente.id,vente.id_vendeur,vente.id_client,vente.paris,vente.tirage,vente.no_ticket,vente.ref_pos,
         vente.tid,vente.sequence,vente.serial,vente.date,vente.heure,vente.eliminer,
         vente_eliminer.id as 'id_vente_eliminer' , vente_eliminer.motif,vente_eliminer.status
         from vente,vente_eliminer where vente.id=vente_eliminer.id_vente and vente.eliminer='non' and vente_eliminer.status='en cours'
         and vente.id_vendeur='{$id_vendeur}' and vente.tire <> 'oui'";
         }
-        $stmt=$con->prepare($req);
+        $stmt = $con->prepare($req);
         $stmt->execute();
-        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
-        foreach ($data as $i=>$v){
-            $ve=new Vendeur();
-            $ve=$ve->findById($v->id_vendeur);
-            $data[$i]->vendeur=$ve;
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+        foreach ($data as $i => $v) {
+            $ve = new Vendeur();
+            $ve = $ve->findById($v->id_vendeur);
+            $data[$i]->vendeur = $ve;
 
             $paris = json_decode($v->paris);
             //parcourir list des paris pour voir les gagnant
-            $montant=0;
+            $montant = 0;
             foreach ($paris as $ii => $p) {
                 $montant += $p->mise;
             }
-            $data[$i]->montant=$montant;
+            $data[$i]->montant = $montant;
         }
         return $data;
     }
 
-    public  function findAll($id_vendeur="")
+    public function findAll($id_vendeur = "")
     {
-        if($id_vendeur==""){
-            $con=self::connection();
-            $req="select *from vente";
-            $stmt=$con->prepare($req);
+        if ($id_vendeur == "") {
+            $con = self::connection();
+            $req = "select *from vente";
+            $stmt = $con->prepare($req);
             $stmt->execute();
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
         }
         return parent::findAll(); // TODO: Change the autogenerated stub
     }
 
-    public static function listeParTirageDate($date,$tirage,$id_vendeur="")
+    public static function listeParTirageDate($date, $tirage, $id_vendeur = "")
     {
-        $con=self::connection();
-        if($id_vendeur==""){
-            $req="select *from vente where date=:date and tirage=:tirage and eliminer='non'";
-            $stmt=$con->prepare($req);
+        $con = self::connection();
+        if ($id_vendeur == "") {
+            $req = "select *from vente where date=:date and tirage=:tirage and eliminer='non'";
+            $stmt = $con->prepare($req);
             $stmt->execute(array(
-                ":date"=>$date,
-                ":tirage"=>$tirage
+                ":date" => $date,
+                ":tirage" => $tirage
             ));
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
-        }else{
-            $req="select *from vente where date=:date and tirage=:tirage and eliminer='non' and id_vendeur=:id_vendeur";
-            $stmt=$con->prepare($req);
+        } else {
+            $req = "select *from vente where date=:date and tirage=:tirage and eliminer='non' and id_vendeur=:id_vendeur";
+            $stmt = $con->prepare($req);
             $stmt->execute(array(
-                ":date"=>$date,
-                ":tirage"=>$tirage,
-                ":id_vendeur"=>$id_vendeur
+                ":date" => $date,
+                ":tirage" => $tirage,
+                ":id_vendeur" => $id_vendeur
             ));
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
         }
     }
 
-    public static function getBilletGagnant($date,$tirage,$id_vendeur=""){
-        $con=self::connection();
-        if($id_vendeur==""){
-            $req="select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='non'";
-            $stmt=$con->prepare($req);
+    public static function getBilletGagnant($date, $tirage, $id_vendeur = "")
+    {
+        $con = self::connection();
+        if ($id_vendeur == "") {
+            $req = "select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='non'";
+            $stmt = $con->prepare($req);
             $stmt->execute(
                 array(
-                    ":date"=>$date,
-                    ":tirage"=>$tirage
+                    ":date" => $date,
+                    ":tirage" => $tirage
                 )
             );
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
-        }else{
-            $req="select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='non' and id_vendeur=:id_vendeur";
-            $stmt=$con->prepare($req);
+        } else {
+            $req = "select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='non' and id_vendeur=:id_vendeur";
+            $stmt = $con->prepare($req);
             $stmt->execute(array(
-                ":date"=>$date,
-                ":tirage"=>$tirage,
-                ":id_vendeur"=>$id_vendeur
+                ":date" => $date,
+                ":tirage" => $tirage,
+                ":id_vendeur" => $id_vendeur
             ));
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
         }
     }
 
-    public static function getBilletGagnantPayer($date,$tirage,$id_vendeur=""){
-        $con=self::connection();
-        if($id_vendeur==""){
-            $req="select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='oui'";
-            $stmt=$con->prepare($req);
+    public static function getBilletGagnantPayer($date, $tirage, $id_vendeur = "")
+    {
+        $con = self::connection();
+        if ($id_vendeur == "") {
+            $req = "select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='oui'";
+            $stmt = $con->prepare($req);
             $stmt->execute(
                 array(
-                    ":date"=>$date,
-                    ":tirage"=>$tirage
+                    ":date" => $date,
+                    ":tirage" => $tirage
                 )
             );
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
-        }else{
-            $req="select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='oui' and id_vendeur=:id_vendeur";
-            $stmt=$con->prepare($req);
+        } else {
+            $req = "select *from vente where date=:date and tirage=:tirage and gain='oui' and payer='oui' and id_vendeur=:id_vendeur";
+            $stmt = $con->prepare($req);
             $stmt->execute(array(
-                ":date"=>$date,
-                ":tirage"=>$tirage,
-                ":id_vendeur"=>$id_vendeur
+                ":date" => $date,
+                ":tirage" => $tirage,
+                ":id_vendeur" => $id_vendeur
             ));
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
         }
     }
 
-    public static function getBilletGagnantTout($date,$tirage,$id_vendeur=""){
-        $con=self::connection();
-        if($id_vendeur==""){
-            $req="select *from vente where date=:date and tirage=:tirage and gain='oui'";
-            $stmt=$con->prepare($req);
+    public static function getBilletGagnantTout($date, $tirage, $id_vendeur = "")
+    {
+        $con = self::connection();
+        if ($id_vendeur == "") {
+            $req = "select *from vente where date=:date and tirage=:tirage and gain='oui'";
+            $stmt = $con->prepare($req);
             $stmt->execute(
                 array(
-                    ":date"=>$date,
-                    ":tirage"=>$tirage
+                    ":date" => $date,
+                    ":tirage" => $tirage
                 )
             );
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
-        }else{
-            $req="select *from vente where date=:date and tirage=:tirage and gain='oui' and id_vendeur=:id_vendeur";
-            $stmt=$con->prepare($req);
+        } else {
+            $req = "select *from vente where date=:date and tirage=:tirage and gain='oui' and id_vendeur=:id_vendeur";
+            $stmt = $con->prepare($req);
             $stmt->execute(array(
-                ":date"=>$date,
-                ":tirage"=>$tirage,
-                ":id_vendeur"=>$id_vendeur
+                ":date" => $date,
+                ":tirage" => $tirage,
+                ":id_vendeur" => $id_vendeur
             ));
-            $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
             return $data;
         }
     }
@@ -478,10 +492,10 @@ class Vente extends Model
                 $pos = new Pos();
                 $pos = $pos->findById($id_pos);
                 $primes = $pos->prime;*/
-                $id_branche=$v->id_branche;
-                $branche=new Branche();
-                $branche=$branche->findById($id_branche);
-                $primes=$branche->prime;
+                $id_branche = $v->id_branche;
+                $branche = new Branche();
+                $branche = $branche->findById($id_branche);
+                $primes = $branche->prime;
 
                 $gain = "non";
                 $totalGain = 0;
@@ -525,6 +539,7 @@ class Vente extends Model
                             $totalGain += $p->mise * $pt2;
                             $paris[$i]->gain = $gain;
                         } elseif ($p->pari == $borlette->lot3) {
+                            $gain = 'oui';
                             $paris[$i]->lot = "lot3";
                             $paris[$i]->montant = $p->mise * $pt3;
                             $totalGain += $p->mise * $pt3;
@@ -552,7 +567,6 @@ class Vente extends Model
                         }
                     }
                     //fin lotto3
-
 
                     //lotto4
                     if (explode(":", $p->codeJeux)[0] >= 41 && explode(":", $p->codeJeux)[0] <= 43) {
@@ -697,38 +711,276 @@ class Vente extends Model
         }
     }
 
-    public  function listeParPos($imei)
+    public static function updateBilletForLotGagnantModifier($date, $tirage)
     {
-            $con=self::connection();
-            $req="select *from vente where tid=:imei";
-            $stmt=$con->prepare($req);
-            $stmt->execute(array(":imei"=>$imei));
-            return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        $lotGagnant = new LotGagnant();
+        $lg = $lotGagnant->rechercherParDateTirage($date, $tirage);
+
+        if ($lg != null) {
+            $borlette = json_decode($lg->borlette);
+            $mariaj = json_decode($lg->mariaj);
+            $mariaj_gratis = json_decode($lg->mariaj);
+            $loto3 = $lg->loto3;
+            $loto4 = json_decode($lg->loto4);
+            $loto5 = json_decode($lg->loto5);
+            $listeVente = Vente::listeParTirageDate($date, $tirage);
+
+            foreach ($listeVente as $index => $v) {
+                /*$id_pos = $v->id_pos;
+                $pos = new Pos();
+                $pos = $pos->findById($id_pos);
+                $primes = $pos->prime;*/
+                $id_branche = $v->id_branche;
+                $branche = new Branche();
+                $branche = $branche->findById($id_branche);
+                $primes = $branche->prime;
+
+                $gain = "non";
+                $totalGain = 0;
+                $paris = json_decode($v->paris);
+                $primesT = json_decode($primes);
+
+                //parcourir list des paris pour voir les gagnant
+                foreach ($paris as $i => $p) {
+
+                    if (strlen($primes) < 10) {
+                        $cj = new CodeJeux();
+                        $cj = $cj->findByCode(explode(":", $p->codeJeux)[0]);
+                        $prime = $cj->gagne;
+                    } else {
+                        $prime = self::getPrimeFromTable($primesT, explode(":", $p->codeJeux)[0]);
+                    }
+
+                    //borlette
+                    if (explode(":", $p->codeJeux)[0] == 20) {
+                        if (stristr($prime, "|")) {
+                            $pt = explode("|", $prime);
+                            $pt1 = $pt[0];
+                            $pt2 = $pt[1];
+                            $pt3 = $pt[2];
+                        } else {
+                            $pt1 = 50;
+                            $pt2 = 20;
+                            $pt3 = 10;
+                        }
+
+                        if ($p->pari == $borlette->lot1) {
+                            $gain = 'oui';
+                            $paris[$i]->lot = "lot1";
+                            $paris[$i]->montant = $p->mise * $pt1;
+                            $totalGain += $p->mise * $pt1;
+                            $paris[$i]->gain = $gain;
+                        } elseif ($p->pari == $borlette->lot2) {
+                            $gain = 'oui';
+                            $paris[$i]->lot = "lot2";
+                            $paris[$i]->montant = $p->mise * $pt2;
+                            $totalGain += $p->mise * $pt2;
+                            $paris[$i]->gain = $gain;
+                        } elseif ($p->pari == $borlette->lot3) {
+                            $gain = 'oui';
+                            $paris[$i]->lot = "lot3";
+                            $paris[$i]->montant = $p->mise * $pt3;
+                            $totalGain += $p->mise * $pt3;
+                            $paris[$i]->gain = $gain;
+                        } else {
+                            $paris[$i]->lot = "";
+                            $paris[$i]->montant = 0;
+                            $paris[$i]->gain = "non";
+                        }
+                    }
+                    //fin borlette
+
+                    //lotto3
+                    if (explode(":", $p->codeJeux)[0] == 30) {
+                        if ($p->pari == $loto3) {
+                            $gain = 'oui';
+                            $paris[$i]->lot = "loto3";
+                            $paris[$i]->montant = $p->mise * $prime;
+                            $totalGain += $p->mise * $prime;
+                            $paris[$i]->gain = $gain;
+                        } else {
+                            $paris[$i]->lot = "";
+                            $paris[$i]->montant = 0;
+                            $paris[$i]->gain = "non";
+                        }
+                    }
+                    //fin lotto3
+
+                    //lotto4
+                    if (explode(":", $p->codeJeux)[0] >= 41 && explode(":", $p->codeJeux)[0] <= 43) {
+
+                        if (explode(":", $p->codeJeux)[0] == 41) {
+                            if ($p->pari == $loto4->option1) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "lotto 4 option 1";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        } elseif (explode(":", $p->codeJeux)[0] == 42) {
+                            if ($p->pari == $loto4->option2) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "lotto 4 option 2";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        } elseif (explode(":", $p->codeJeux)[0] == 43) {
+                            if ($p->pari === $loto4->option3) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "lotto 4 option 3";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        }
+
+                    }
+
+                    //lotto5
+                    if (explode(":", $p->codeJeux)[0] >= 51 && explode(":", $p->codeJeux)[0] <= 53) {
+
+                        if (explode(":", $p->codeJeux)[0] == 51) {
+                            if ($p->pari == $loto5->option1) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "lotto 5 option 1";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        }
+
+                        if (explode(":", $p->codeJeux)[0] == 52) {
+                            if ($p->pari == $loto5->option2) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "lotto 5 option 2";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        }
+
+                        if (explode(":", $p->codeJeux)[0] == 53) {
+                            if ($p->pari == $loto5->option3) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "lotto 5 option 3";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        }
+                    }
+
+                    //mariage
+                    if (explode(":", $p->codeJeux)[0] == 40) {
+                        if (stristr($p->pari, "*") and strlen($p->pari) == 5) {
+                            if (in_array($p->pari, $mariaj)) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "mariaj";
+                                $paris[$i]->montant = $p->mise * $prime;
+                                $totalGain += $p->mise * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        }
+                    }
+
+                    //mariage gratuit
+                    if (explode(":", $p->codeJeux)[0] == 44) {
+                        if (stristr($p->pari, "*") and strlen($p->pari) == 5) {
+                            if (in_array($p->pari, $mariaj)) {
+                                $gain = 'oui';
+                                $paris[$i]->lot = "mariaj gratis";
+                                $paris[$i]->montant = 1 * $prime;
+                                $totalGain += 1 * $prime;
+                                $paris[$i]->gain = $gain;
+                            } else {
+                                $paris[$i]->lot = "";
+                                $paris[$i]->montant = 0;
+                                $paris[$i]->gain = "non";
+                            }
+                        }
+                    }
+
+                }
+                if ($gain == "oui") {
+                    $listeVente[$index]->paris = json_encode($paris);
+                    $listeVente[$index]->total_gain = $totalGain;
+                    $listeVente[$index]->gain = $gain;
+                    $listeVente[$index]->tire = "oui";
+                } else {
+                    $listeVente[$index]->paris = json_encode($paris);
+                    $listeVente[$index]->total_gain = "0";
+                    $listeVente[$index]->gain = "non";
+                    $listeVente[$index]->tire = "oui";
+                }
+                $listeVente[$index]->update();
+            }
+
+        }
     }
 
-    public function listerParVendeurDateTirage($id_vendeur,$date,$tirage){
-        $con=self::connection();
-        $req="select *from vente where date=:date and id_vendeur=:id_vendeur and tirage=:tirage and eliminer='non'";
-        $stmt=$con->prepare($req);
-        $stmt->execute(array(
-            ":date"=>$date,
-            ":id_vendeur"=>$id_vendeur,
-            ":tirage"=>$tirage
-        ));
-
-        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    public function listeParPos($imei)
+    {
+        $con = self::connection();
+        $req = "select *from vente where tid=:imei";
+        $stmt = $con->prepare($req);
+        $stmt->execute(array(":imei" => $imei));
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
     }
 
-    public function listerParVendeurDate($id_vendeur,$date){
-        $con=self::connection();
-        $req="select *from vente where date=:date and id_vendeur=:id_vendeur and eliminer='non'";
-        $stmt=$con->prepare($req);
+    public function listerParVendeurDateTirage($id_vendeur, $date, $tirage)
+    {
+        $con = self::connection();
+        $req = "select *from vente where date=:date and id_vendeur=:id_vendeur and tirage=:tirage and eliminer='non'";
+        $stmt = $con->prepare($req);
         $stmt->execute(array(
-            ":date"=>$date,
-            ":id_vendeur"=>$id_vendeur
+            ":date" => $date,
+            ":id_vendeur" => $id_vendeur,
+            ":tirage" => $tirage
         ));
 
-        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+    }
+
+    public function listerParVendeurDate($id_vendeur, $date)
+    {
+        $con = self::connection();
+        $req = "select *from vente where date=:date and id_vendeur=:id_vendeur and eliminer='non'";
+        $stmt = $con->prepare($req);
+        $stmt->execute(array(
+            ":date" => $date,
+            ":id_vendeur" => $id_vendeur
+        ));
+
+        return $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
     }
 
     public static function listeParisParDate($date1, $date2, $tirage, $type_jeux = "")
@@ -761,56 +1013,63 @@ class Vente extends Model
         return $paris;
     }
 
-    public static function totalValide(){
-        $con=self::connection();
-        $req="select *from vente where eliminer='non'";
-        $stmt=$con->prepare($req);
+    public static function totalValide()
+    {
+        $con = self::connection();
+        $req = "select *from vente where eliminer='non'";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
-    public static function totalEliminer(){
-        $con=self::connection();
-        $req="select *from vente where eliminer='oui'";
-        $stmt=$con->prepare($req);
+    public static function totalEliminer()
+    {
+        $con = self::connection();
+        $req = "select *from vente where eliminer='oui'";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
-    public static function total(){
-        $con=self::connection();
-        $req="select *from vente";
-        $stmt=$con->prepare($req);
+    public static function total()
+    {
+        $con = self::connection();
+        $req = "select *from vente";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
-    public static function totalEncourElimination(){
-        $con=self::connection();
-        $req="select *from vente_eliminer where status='en cours'";
-        $stmt=$con->prepare($req);
+    public static function totalEncourElimination()
+    {
+        $con = self::connection();
+        $req = "select *from vente_eliminer where status='en cours'";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
-    public static function totalGain(){
-        $con=self::connection();
-        $req="select *from vente where gain='oui'";
-        $stmt=$con->prepare($req);
+    public static function totalGain()
+    {
+        $con = self::connection();
+        $req = "select *from vente where gain='oui'";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
-    public static function totalPerdu(){
-        $con=self::connection();
-        $req="select *from vente where gain<>'oui'";
-        $stmt=$con->prepare($req);
+    public static function totalPerdu()
+    {
+        $con = self::connection();
+        $req = "select *from vente where gain<>'oui'";
+        $stmt = $con->prepare($req);
         $stmt->execute();
         return $stmt->rowCount();
     }
 
-    private static function calculTotalMise($paris){
-        $montant=0;
+    private static function calculTotalMise($paris)
+    {
+        $montant = 0;
         foreach ($paris as $ii => $p) {
             $montant += $p->mise;
         }
@@ -1063,9 +1322,9 @@ class Vente extends Model
 
         $vendeur = new Vendeur();
         $vendeur = $vendeur->findById($id_vendeur);
-        $id_branche=$vendeur->id_branche;
-        $branche=new Branche();
-        $branche=$branche->findById($id_branche);
+        $id_branche = $vendeur->id_branche;
+        $branche = new Branche();
+        $branche = $branche->findById($id_branche);
 
         $obj = new StdClass();
         $totalVendu = 0;
@@ -1119,7 +1378,7 @@ class Vente extends Model
     }
 
 
-    public static function getRapport($date1, $date2, $tirage = "tout",$succursal = "tout")
+    public static function getRapport($date1, $date2, $tirage = "tout", $succursal = "tout")
     {
         //succursal egale branche
         $v = new Vendeur();
@@ -1160,7 +1419,7 @@ class Vente extends Model
                 $trest += $rest;
 
 
-                $o->totalVendu =DefaultApp::formatComptable( $tVendu);
+                $o->totalVendu = DefaultApp::formatComptable($tVendu);
                 $o->totalPrim = DefaultApp::formatComptable($tPrim);
                 $o->totalCommission = DefaultApp::formatComptable($tCommision);
                 $o->rest = DefaultApp::formatComptable($rest);
