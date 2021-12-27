@@ -230,9 +230,18 @@ class Vendeur extends Model
                 $data[0]->statut = "ok";
                 $data[0]->pos = $pos;
                 $data[0]->setConnect("oui");
-                return $data[0];
+                return
+                    array(
+                        "result" =>$data[0],
+                        "message" => "Email ou mot de passe incorrect",
+                        "statut" => "ok"
+                    );
             } else {
-                return "no";
+                return
+                    array(
+                        "message" => "Identifiant ou mot de passe incorrect",
+                        "statut" => "no"
+                    );
             }
         } catch (\Exception $ex) {
             throw new \Exception($ex->getMessage());
@@ -303,6 +312,19 @@ class Vendeur extends Model
             return "ok";
         }
         return "no";
+    }
+
+    public function getDefaultVendeur(){
+        $con=self::connection();
+        $req="select *from vendeur where nom='default' and prenom='vendeur'";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return $data[0];
+        }else{
+            return null;
+        }
     }
 
 

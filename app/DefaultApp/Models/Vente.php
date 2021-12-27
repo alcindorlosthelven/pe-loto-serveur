@@ -11,7 +11,7 @@ class Vente extends Model
 {
 
     public $id, $no_ticket, $id_client, $id_vendeur, $ref_pos, $tid, $sequence, $serial, $date, $heure, $paris, $tirage, $eliminer;
-    public $gain, $total_gain, $payer, $id_branche, $id_superviseur, $id_pos;
+    public $gain, $total_gain, $payer, $id_branche, $id_superviseur, $id_pos,$tire;
 
     /**
      * @return mixed
@@ -477,31 +477,40 @@ class Vente extends Model
     {
         $lotGagnant = new LotGagnant();
         $lg = $lotGagnant->rechercherParDateTirage($date, $tirage);
-
         if ($lg != null) {
             $borlette = json_decode($lg->borlette);
             $mariaj = json_decode($lg->mariaj);
-            $mariaj_gratis = json_decode($lg->mariaj);
             $loto3 = $lg->loto3;
             $loto4 = json_decode($lg->loto4);
             $loto5 = json_decode($lg->loto5);
             $listeVente = Vente::listeParTirageDate($date, $tirage);
+            $tir = Tirage::rechercherParNom($tirage);
 
             foreach ($listeVente as $index => $v) {
-                /*$id_pos = $v->id_pos;
-                $pos = new Pos();
-                $pos = $pos->findById($id_pos);
-                $primes = $pos->prime;*/
-                $id_branche = $v->id_branche;
-                $branche = new Branche();
-                $branche = $branche->findById($id_branche);
-                $primes = $branche->prime;
+                $br=new Branche();
+                $br=$br->findById($v->id_branche);
+                if(json_decode($br->prime)===null) {
+                    $prm = \app\DefaultApp\Models\PosPrimeTirage::rechercherParPosTirage($v->id_pos, $v->tirage);
+                    if ($prm == null) {
+                        if (json_decode($tir->prime) === null) {
+                            $id_pos = $v->id_pos;
+                            $pos = new Pos();
+                            $pos = $pos->findById($id_pos);
+                            $primes = $pos->prime;
+                        } else {
+                            $primes = $tir->prime;
+                        }
+                    } else {
+                        $primes = $prm->prime;
+                    }
+                }else{
+                    $primes=$br->prime;
+                }
 
                 $gain = "non";
                 $totalGain = 0;
                 $paris = json_decode($v->paris);
                 $primesT = json_decode($primes);
-
                 //parcourir list des paris pour voir les gagnant
                 foreach ($paris as $i => $p) {
 
@@ -532,12 +541,40 @@ class Vente extends Model
                             $paris[$i]->montant = $p->mise * $pt1;
                             $totalGain += $p->mise * $pt1;
                             $paris[$i]->gain = $gain;
+
+                            //verifier si lot1 fait lot2
+                            if ($p->pari == $borlette->lot2) {
+                                $gain = 'oui';
+                                $paris[$i]->lot .= " et lot2";
+                                $paris[$i]->montant += $p->mise * $pt2;
+                                $totalGain += $p->mise * $pt2;
+                                $paris[$i]->gain = $gain;
+                            }
+
+                            //verifier si lot1 fait lot3
+                            if ($p->pari == $borlette->lot3) {
+                                $gain = 'oui';
+                                $paris[$i]->lot .= " et lot3";
+                                $paris[$i]->montant += $p->mise * $pt3;
+                                $totalGain += $p->mise * $pt3;
+                                $paris[$i]->gain = $gain;
+                            }
+
                         } elseif ($p->pari == $borlette->lot2) {
                             $gain = 'oui';
                             $paris[$i]->lot = "lot2";
                             $paris[$i]->montant = $p->mise * $pt2;
                             $totalGain += $p->mise * $pt2;
                             $paris[$i]->gain = $gain;
+                            //verifier si lot2 fait lot3
+                            if ($p->pari == $borlette->lot3) {
+                                $gain = 'oui';
+                                $paris[$i]->lot .= " et lot3";
+                                $paris[$i]->montant += $p->mise * $pt3;
+                                $totalGain += $p->mise * $pt3;
+                                $paris[$i]->gain = $gain;
+                            }
+
                         } elseif ($p->pari == $borlette->lot3) {
                             $gain = 'oui';
                             $paris[$i]->lot = "lot3";
@@ -692,6 +729,7 @@ class Vente extends Model
                     }
 
                 }
+
                 if ($gain == "oui") {
                     $listeVente[$index]->paris = json_encode($paris);
                     $listeVente[$index]->total_gain = $totalGain;
@@ -705,9 +743,9 @@ class Vente extends Model
                     $listeVente[$index]->payer = 'non';
                     $listeVente[$index]->tire = "oui";
                 }
+
                 $listeVente[$index]->update();
             }
-
         }
     }
 
@@ -719,21 +757,20 @@ class Vente extends Model
         if ($lg != null) {
             $borlette = json_decode($lg->borlette);
             $mariaj = json_decode($lg->mariaj);
-            $mariaj_gratis = json_decode($lg->mariaj);
             $loto3 = $lg->loto3;
             $loto4 = json_decode($lg->loto4);
             $loto5 = json_decode($lg->loto5);
             $listeVente = Vente::listeParTirageDate($date, $tirage);
-
+            $tir = Tirage::rechercherParNom($tirage);
             foreach ($listeVente as $index => $v) {
-                /*$id_pos = $v->id_pos;
-                $pos = new Pos();
-                $pos = $pos->findById($id_pos);
-                $primes = $pos->prime;*/
-                $id_branche = $v->id_branche;
-                $branche = new Branche();
-                $branche = $branche->findById($id_branche);
-                $primes = $branche->prime;
+                if (json_decode($tir->prime) === null) {
+                    $id_pos = $v->id_pos;
+                    $pos = new Pos();
+                    $pos = $pos->findById($id_pos);
+                    $primes = $pos->prime;
+                } else {
+                    $primes = $tir->prime;
+                }
 
                 $gain = "non";
                 $totalGain = 0;
@@ -770,12 +807,40 @@ class Vente extends Model
                             $paris[$i]->montant = $p->mise * $pt1;
                             $totalGain += $p->mise * $pt1;
                             $paris[$i]->gain = $gain;
+
+                            //verifier si lot1 fait lot2
+                            if ($p->pari == $borlette->lot2) {
+                                $gain = 'oui';
+                                $paris[$i]->lot .= " et lot2";
+                                $paris[$i]->montant += $p->mise * $pt2;
+                                $totalGain += $p->mise * $pt2;
+                                $paris[$i]->gain = $gain;
+                            }
+
+                            //verifier si lot1 fait lot3
+                            if ($p->pari == $borlette->lot3) {
+                                $gain = 'oui';
+                                $paris[$i]->lot .= " et lot3";
+                                $paris[$i]->montant += $p->mise * $pt3;
+                                $totalGain += $p->mise * $pt3;
+                                $paris[$i]->gain = $gain;
+                            }
+
                         } elseif ($p->pari == $borlette->lot2) {
                             $gain = 'oui';
                             $paris[$i]->lot = "lot2";
                             $paris[$i]->montant = $p->mise * $pt2;
                             $totalGain += $p->mise * $pt2;
                             $paris[$i]->gain = $gain;
+                            //verifier si lot2 fait lot3
+                            if ($p->pari == $borlette->lot3) {
+                                $gain = 'oui';
+                                $paris[$i]->lot .= " et lot3";
+                                $paris[$i]->montant += $p->mise * $pt3;
+                                $totalGain += $p->mise * $pt3;
+                                $paris[$i]->gain = $gain;
+                            }
+
                         } elseif ($p->pari == $borlette->lot3) {
                             $gain = 'oui';
                             $paris[$i]->lot = "lot3";
@@ -787,6 +852,7 @@ class Vente extends Model
                             $paris[$i]->montant = 0;
                             $paris[$i]->gain = "non";
                         }
+
                     }
                     //fin borlette
 
@@ -805,6 +871,7 @@ class Vente extends Model
                         }
                     }
                     //fin lotto3
+
 
                     //lotto4
                     if (explode(":", $p->codeJeux)[0] >= 41 && explode(":", $p->codeJeux)[0] <= 43) {
@@ -944,6 +1011,71 @@ class Vente extends Model
                 $listeVente[$index]->update();
             }
 
+        }
+    }
+
+    public static function totalFicheParisClient($date, $id_client,$tirage)
+    {
+        $obj = new StdClass();
+        $con = self::connection();
+        $req = "select *from vente where tirage='{$tirage}' and id_client='{$id_client}' and date='{$date}' and eliminer='non' and tire='oui' and gain='oui'";
+        $req1= "select *from vente where tirage='{$tirage}' and id_client='{$id_client}' and date='{$date}' and eliminer='non' and tire='oui' and gain='oui'";
+        $stmt = $con->prepare($req);
+        $stmt->execute();
+        $obj->totalFiche = $stmt->rowCount();
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+        $paris = array();
+        if (count($data) > 0) {
+            foreach ($data as $v) {
+                $p = $v->listeParis();
+                $paris = array_merge($paris, $p);
+            }
+        }
+        $obj->totalParis = count($paris);
+
+        $stmt1 = $con->prepare($req1);
+        $stmt1->execute();
+        $obj->totalFicheGagnant = $stmt1->rowCount();
+        return $obj;
+    }
+
+    public static function totalGainClient($date,$id_client,$tirage)
+    {
+        $con = self::connection();
+        $req = "select sum(total_gain) as total from vente where date='{$date}' and eliminer='non' and gain='oui'
+        and tire='oui' and tirage='{$tirage}' and id_client='{$id_client}'";
+        $stmt = $con->prepare($req);
+        $stmt->execute();
+        $data = $stmt->fetch();
+        return floatval($data['total']);
+    }
+
+    public static function updateBalanceClient($date, $tirage)
+    {
+        $v = new Client();
+        $listeClient = $v->findAll();
+        foreach ($listeClient as $client) {
+            $id_client = $client->id;
+            $tFicheParis = self::totalFicheParisClient($date,$id_client,$tirage);
+            if ($tFicheParis->totalFiche > 0) {
+                $totalGain=self::totalGainClient($date,$id_client,$tirage);
+                $m=CompteClient::depot($id_client,$totalGain);
+                if($m=="ok"){
+                    $infC=CompteClient::getInfoCompte($id_client);
+                    $montantAvant=CompteClient::getBalance($id_client);
+                    $message="Félicitation !! vous avez gagné $totalGain au tirage $tirage";
+                    $clt1=new ClientCompteTransaction();
+                    $clt1->id_compte=$infC->id;
+                    $clt1->type="depot";
+                    $clt1->date=date("Y-m-d");
+                    $clt1->heure=date("H:i:s");
+                    $clt1->montant=floatval($totalGain);
+                    $clt1->montant_avant=$montantAvant;
+                    $clt1->montant_apres=CompteClient::getBalance($id_client);
+                    $clt1->message="Gain $date <br>$tirage";
+                    $mclt1=$clt1->add();
+                }
+            }
         }
     }
 
@@ -1479,6 +1611,93 @@ class Vente extends Model
         }
 
         return $resultat;
+    }
+
+    public function listerParClient($id_client){
+        $con=self::connection();
+        $req="select *from vente where id_client=:id_client";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(":id_client"=>$id_client));
+        return $stmt->fetchAll(\PDO::FETCH_OBJ);
+    }
+
+    public function numeroTicketExiste($numero){
+        $con=self::connection();
+        $req="select *from vente where no_ticket=:no_ticket";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(":no_ticket"=>$numero));
+        $data=$stmt->fetchAll();
+        if(count($data)>0){
+            return true;
+        }
+        return false;
+    }
+
+    public static function totalVenteParBoule($tirage, $codeJeux, $boule, $id_vendeur = "")
+    {
+        $totalV = 0;
+        $date = date("Y-m-d");
+        if ($id_vendeur == "") {
+            $req = "select *from vente where date='{$date}' and eliminer='non' and tirage='{$tirage}'";
+        } else {
+            $req = "select *from vente where date='{$date}' and id_vendeur='{$id_vendeur}' and eliminer='non' and tirage='{$tirage}'";
+        }
+        $obj = new StdClass();
+        $con = self::connection();
+        $stmt = $con->prepare($req);
+        $stmt->execute();
+        $obj->totalFiche = $stmt->rowCount();
+        $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+        $paris = array();
+
+        if (count($data) > 0) {
+            foreach ($data as $v) {
+                $p = $v->listeParis();
+                $paris = array_merge($paris, $p);
+            }
+        }
+
+        foreach ($paris as $pari) {
+            if ($pari->pari == $boule && explode(":", $pari->codeJeux)[0] == $codeJeux) {
+                $totalV += intval($pari->mise);
+            }
+        }
+        return $totalV;
+    }
+
+    public function add()
+    {
+        if($this->numeroTicketExiste($this->no_ticket)){
+            return "Imposible d'ajouter la fiche numero ticket deja prise";
+        }
+        try{
+            $cl=new Client();
+            $cl=$cl->findById($this->id_client);
+            if($cl->nom!="default" and $cl->prenom != "client"){
+                $infoC=CompteClient::getInfoCompte($cl->id);
+                $totalMise=Vente::calculTotalMise(json_decode($this->paris));
+                if($totalMise>$infoC->balance_jeux){
+                    return "balance insufisant";
+                }else{
+                    $balanceAvantA=CompteClient::getBalanceCredit($cl->id);
+                    CompteClient::retraitCredit($cl->id,$totalMise);
+                    $clt1=new ClientCompteTransaction();
+                    $clt1->id_compte=$infoC->id;
+                    $clt1->type="retrait";
+                    $clt1->date=$this->date;
+                    $clt1->heure=$this->heure;
+                    $clt1->montant=floatval($totalMise);
+                    $clt1->montant_avant=$balanceAvantA;
+                    $clt1->montant_apres=CompteClient::getBalanceCredit($cl->id);
+                    $clt1->message="payé fiche numero : ".$this->no_ticket;
+                    $mclt=$clt1->add();
+                }
+            }
+            return parent::add(); // TODO: Change the autogenerated stub
+        }catch (\Exception $ex){
+            return $ex->getMessage();
+        }
+
     }
 
 }

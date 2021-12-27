@@ -75,7 +75,6 @@ class Model extends Session
                         $valeurs .= ":" . $name . ",";
                     }
                 }
-
             }
 
 

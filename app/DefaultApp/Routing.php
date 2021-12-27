@@ -19,7 +19,15 @@ App::get("code-jeux","codeJeux.gets");
 App::delete("code-jeux/:id","codeJeux.delete")->avec("id","[0-9]+");
 App::post("ajouter-numero","codeJeux.addNumero");
 App::post("lister-numero","codeJeux.getsNumero");
+App::post("ajouter-limite","codeJeux.addLimite");
+
+
+App::post("ajouter-numero-bloquer","codeJeux.addNumeroBloquer");
+App::get("numero-bloquer","codeJeux.numeroBloquer");
+App::get("supprimer-numero-bloquer-:id","codeJeux.supprimerNumeroBloquer")->avec("id","[0-9]+");
 //fin code jeux autre lien
+
+
 
 //client
 App::post("client","client.add");
@@ -29,6 +37,8 @@ App::get("client","client.gets");
 App::delete("client/:id","client.delete")->avec("id","[0-9]+");
 App::get("client/default","client.getDefaultClient");
 App::get("client/total","client.total");
+App::post("depot-credit","client.depotCredit");
+App::post("retrait-balance","client.retraitBalance");
 //fin client
 
 

@@ -9,7 +9,7 @@ use systeme\Model\Model;
 class Tirage extends Model
 {
 
-    public $id,$tirage,$statut,$nom,$heure_fermeture,$heure_ouverture,$heure_rapport,$email_rapport,$site_api;
+    public $id,$tirage,$statut,$nom,$heure_fermeture,$heure_ouverture,$heure_rapport,$email_rapport,$site_api,$prime;
 
     /**
      * @return mixed
@@ -82,6 +82,15 @@ class Tirage extends Model
             return $data[0];
         }
         return null;
+    }
+
+    public static function isTirageEncour2($tirage){
+        $heure = date("H:i");
+        $ti = Tirage::rechercherParNom($tirage);
+        if ($heure >= $ti->heure_fermeture) {
+            return true;
+        }
+        return false;
     }
 
     public static function isTirageEncour($tirage){

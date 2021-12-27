@@ -4,6 +4,8 @@
 namespace app\DefaultApp\Controlleurs;
 
 
+use app\DefaultApp\DefaultApp;
+use app\DefaultApp\Models\BouleBloquer;
 use app\DefaultApp\Models\Branche;
 use app\DefaultApp\Models\CodeJeux;
 use app\DefaultApp\Models\NumeroControler;
@@ -190,6 +192,28 @@ class CodeJeuxControlleur extends Controlleur
 
     }
 
+    public function addLimite(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+            foreach ($data as $cj){
+                $dest=new CodeJeux();
+                $c=DefaultApp::cast($dest,$cj);
+                $c->update();
+            }
+            http_response_code(200);
+            echo json_encode(array("message" => "Fait avec success"));
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
+
     public function addPrime(){
         try{
             header("Access-Control-Allow-Origin: *");
@@ -288,6 +312,90 @@ class CodeJeuxControlleur extends Controlleur
             http_response_code(503);
             echo json_encode(array("message" => $ex->getMessage()));
         }
+
+    }
+
+    public function addNumeroBloquer(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+
+            if(empty($data->boule)){
+                http_response_code(503);
+                echo json_encode(array("message" => "boule invalide"));
+                return;
+            }
+
+            $codeJeux=new BouleBloquer();
+            $codeJeux->remplire((array)$data);
+            $m=$codeJeux->add();
+            if($m=="ok"){
+                $codeJeux=$codeJeux->lastObjet();
+                $codeJeux=$codeJeux->toJson();
+                http_response_code(200);
+                echo $codeJeux;
+                return;
+            }
+            http_response_code(503);
+            echo json_encode(array("message" => $m));
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+
+    }
+
+    public function numeroBloquer(){
+        try{
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $b=new BouleBloquer();
+            $liste=$b->findAll();
+            http_response_code(200);
+            echo json_encode($liste);
+        }catch (\Exception $ex){
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
+    }
+
+    public function supprimerNumeroBloquer($id){
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: access");
+        header("Access-Control-Allow-Methods: DELETE");
+        header("Access-Control-Allow-Credentials: true");
+        header("Content-Type: application/json; charset=UTF-8");
+        if(empty($id)){
+            http_response_code(503);
+            echo json_encode(array("message" => "id invalide"));
+            return;
+        }
+
+        $obj=new BouleBloquer();
+        $obj=$obj->findById($id);
+
+        if ($obj == null) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Objet non trouver pour l'id : {$id}"));
+            return;
+        }
+
+        $m=$obj->deleteById($id);
+        if($m){
+            http_response_code(200);
+            echo json_encode(array("message"=>"supprimer avec success"));
+            return;
+        }
+
+        http_response_code(503);
+        echo json_encode(array("message" => $m));
 
     }
 }

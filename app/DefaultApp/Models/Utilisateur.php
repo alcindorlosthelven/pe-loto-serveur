@@ -209,4 +209,29 @@ class Utilisateur extends Model
         $stmt->execute();
         return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
     }
+
+    public function getDefaultSuperviseur(){
+        $con=self::connection();
+        $req="select *from utilisateur where nom=:nom and prenom=:prenom and role='superviseur'";
+        $stmt=$con->prepare($req);
+        $stmt->execute(array(":nom"=>"default",":prenom"=>"superviseur"));
+        $data=$stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+        if(count($data)>0){
+            return $data[0];
+        }else{
+            return null;
+        }
+    }
+
+    public function ajouter(){
+        $con=self::connection();
+        $req="insert into utilisateur (id,nom,prenom,pseudo,password,role,objet) value ('{$this->id}','{$this->nom}','{$this->prenom}',
+        '{$this->pseudo}','{$this->password}','{$this->role}','{$this->objet}')";
+
+        $stmt=$con->prepare($req);
+        if($stmt->execute()){
+            return "ok";
+        }
+        return "no";
+    }
 }

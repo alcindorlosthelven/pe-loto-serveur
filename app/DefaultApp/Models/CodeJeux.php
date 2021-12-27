@@ -9,7 +9,7 @@ use systeme\Model\Model;
 class CodeJeux extends Model
 {
     protected $table="code_jeux";
-    public $id,$code,$description,$gagne;
+    public $id,$code,$description,$gagne,$limite;
     /**
      * @return mixed
      */
@@ -103,5 +103,13 @@ class CodeJeux extends Model
         return  false;
     }
 
+    public function lister()
+    {
+        $con=self::connection();
+        $req="select *from code_jeux order by id asc";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
+    }
 
 }

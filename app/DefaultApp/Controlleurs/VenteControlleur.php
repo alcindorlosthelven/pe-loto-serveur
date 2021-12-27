@@ -5,15 +5,20 @@ namespace app\DefaultApp\Controlleurs;
 
 //+2295 1576 922
 
+use app\DefaultApp\DefaultApp;
 use app\DefaultApp\Models\BouleBloquer;
 use app\DefaultApp\Models\Branche;
 use app\DefaultApp\Models\Client;
 use app\DefaultApp\Models\CodeJeux;
+use app\DefaultApp\Models\CompteClient;
+use app\DefaultApp\Models\LimiteBoule;
 use app\DefaultApp\Models\MotifElimination;
 use app\DefaultApp\Models\NumeroControler;
 use app\DefaultApp\Models\Pos;
-use app\DefaultApp\Models\Succursal;
+use app\DefaultApp\Models\PosLimiteTirage;
+//use app\DefaultApp\Models\Succursal;
 use app\DefaultApp\Models\Tirage;
+use app\DefaultApp\Models\Utilisateur;
 use app\DefaultApp\Models\Vendeur;
 use app\DefaultApp\Models\Vente;
 use app\DefaultApp\Models\VenteEliminer;
@@ -22,6 +27,519 @@ use systeme\Controlleur\Controlleur;
 
 class VenteControlleur extends Controlleur
 {
+
+    function getLimiteFromTable($tables,$code){
+        $limite=100000;
+        foreach ($tables as $v){
+            if($v->code==$code){
+                $limite=$v->limite;
+            }
+        }
+        return floatval($limite);
+    }
+
+    function getLimite($tirage,$pari,$pos,$id_vendeur){
+        $codeJeux=explode(":",$pari->codeJeux)[0];
+        $jeux=explode(":",$pari->codeJeux)[1];
+        $boule=$pari->pari;
+        $m="";
+        $cjeux=new CodeJeux();
+
+        $limites=PosLimiteTirage::getLimite($pos->id,$tirage);
+        if (strlen($limites) < 6) {
+            $limites=$pos->limite;
+        }
+
+        $l=LimiteBoule::getLimite($boule,$tirage);
+        if($l==null){
+            $l=LimiteBoule::getLimiteTout($boule,$tirage);
+        }
+        if($l==null) {
+            if (strlen($limites) < 6) {
+                $limites = $cjeux->lister();
+                $totalVente = Vente::totalVenteParBoule($tirage, $codeJeux, $boule);
+            } else {
+                $limites = json_decode($limites);
+                $totalVente = Vente::totalVenteParBoule($tirage, $codeJeux, $boule, $id_vendeur);
+            }
+            $l=$this->getLimiteFromTable($limites,$codeJeux);
+        }else{
+            $totalVente = Vente::totalVenteParBoule($tirage, $codeJeux, $boule);
+        }
+
+        $totalVente=$totalVente+intval($pari->mise);
+        if($totalVente >= $l){
+            if($codeJeux!=44) {
+                $m = "$jeux : $boule est atteint la limite de vente";
+                http_response_code(503);
+                echo json_encode(array("message" => $m));
+                die();
+            }
+        }
+        return $m;
+    }
+
+    private function traiteVente($data){
+
+        if (empty($data->no_ticket)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no ticket invalide"));
+            return;
+        }
+
+        if (empty($data->id_client)) {
+            $cl = new Client();
+            $cl = $cl->getDefaultClient();
+            if ($cl != null) {
+                $data->id_client = $cl->getId();
+            } else {
+                $cl = new Client();
+                $cl->id = 1;
+                $cl->nom = "default";
+                $cl->prenom = "client";
+                $cl->sexe = "m";
+                $cl->telephone = "00000000";
+                $cl->pseudo = "defaultclient";
+                $cl->connect = "non";
+                $cl->objet = "client";
+                $m = $cl->add();
+                if ($m == "ok") {
+                    $data->id_client = 1;
+                } else {
+                    http_response_code(503);
+                    echo json_encode(array("message" => "id client invalide"));
+                    return;
+                }
+            }
+        }
+
+        if (!Client::existe($data->id_client)) {
+            http_response_code(404);
+            echo json_encode(array("message" => "client non trouver pour l'id : {$data->id_client}"));
+            return;
+        }
+
+        if (empty($data->id_vendeur)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "id vendeur invalide"));
+            return;
+        }
+
+        if($data->id_vendeur=="n/a"){
+            $vn = new Vendeur();
+            $vn = $vn->getDefaultVendeur();
+            if ($vn != null) {
+                $data->id_vendeur = $vn->getId();
+            } else {
+                $br=new Branche();
+                $br=$br->getDefaultBranche();
+                if($br==null){
+                    $id_branche=1;
+                    $sup=new Utilisateur();
+                    $sup=$sup->getDefaultSuperviseur();
+                    if($sup==null){
+                        $id_supperviseur=1;
+                        $su=new Utilisateur();
+                        $su->id=$id_supperviseur;
+                        $su->nom="default";
+                        $su->prenom="superviseur";
+                        $su->pseudo="default";
+                        $su->password=md5("default");
+                        $su->role="superviseur";
+                        $su->objet="utilisateur";
+                        $su->ajouter();
+                    }else{
+                        $id_supperviseur=$sup->id;
+                    }
+                    $b=new Branche();
+                    $b->id=$id_branche;
+                    $b->id_supperviseur=$id_supperviseur;
+                    $b->branche="client";
+                    $b->ajouter();
+                }else{
+                    $id_branche=$br->id;
+                }
+                $clv = new Vendeur();
+                $clv->id_branche=$id_branche;
+                $clv->nom = "default";
+                $clv->prenom = "vendeur";
+                $clv->sexe = "m";
+                $clv->telephone = "00000000";
+                $clv->pseudo = "defaultvendeur";
+                $clv->connect = "non";
+                $clv->objet = "vendeur";
+                $mv = $clv->add();
+                if ($mv == "ok") {
+                    $data->id_vendeur = $clv->lastId();
+                } else {
+                    http_response_code(503);
+                    echo json_encode(array("message" => "id vendeur invalide"));
+                    return;
+                }
+            }
+        }else {
+            if (!Vendeur::existe($data->id_vendeur)) {
+                http_response_code(404);
+                echo json_encode(array("message" => "Vendeur non trouver pour l'id : {$data->id_vendeur}"));
+                return;
+            }
+        }
+
+        $agent=new Vendeur();
+        $vend=$agent->findById($data->id_vendeur);
+
+        if (empty($data->ref_pos)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "ref pos invalide"));
+            return;
+        }
+
+        if (empty($data->tid)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "tid invalide"));
+            return;
+        }
+
+        if (empty($data->sequence)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no sequence invalide"));
+            return;
+        }
+
+        if (empty($data->serial)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no serial invalide"));
+            return;
+        }
+
+        if (!Tirage::isTirageEncour($data->tirage)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "Impossible d'ajouter la fiche , tirage fermé"));
+            return;
+        }
+
+        if (Tirage::isTirageEncour2($data->tirage)) {
+            http_response_code(503);
+            $ti=Tirage::rechercherParNom($data->tirage);
+            $ti->statut = "n/a";
+            $ti->update();
+            echo json_encode(array("message" => "Impossible d'ajouter la fiche , tirage fermé (2em verification)"));
+            return;
+        }
+
+        $pos = Pos::rechercherParImei($data->tid);
+        if($pos!==null) {
+            if ($pos->statut !== "actif") {
+                http_response_code(503);
+                echo json_encode(array("message" => "Impossible d'ajouter le fiche , pos desactiver par le systeme"));
+                return;
+            }
+        }else{
+            http_response_code(503);
+            echo json_encode(array("message" => "Impossible d'ajouter le fiche , pos introuvable dans par le systeme"));
+            return;
+        }
+
+
+        $bouleBloquer=new BouleBloquer();
+        if (empty($data->paris) or count($data->paris) <= 0) {
+            cj:
+            http_response_code(503);
+            echo json_encode(array("message" => "liste pari introuvable pour cette vente"));
+            return;
+        }
+
+        $mpbloquer="";
+        $mlimite="";
+        $bb=json_decode($pos->boule_bloquer);
+        if($bb==null) {
+            foreach ($data->paris as $pa) {
+                if ($bouleBloquer->existe($pa->pari)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                    http_response_code(503);
+                    echo json_encode(array("message" => $pa->pari." est bloqué sur le système"));
+                    die();
+                }
+                $mlimite .= $this->getLimite($data->tirage,$pa, $pos,$data->id_vendeur);
+            }
+        }else{
+            foreach ($data->paris as $pa) {
+                if ($bouleBloquer->existeFromTable($pa->pari,$bb)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                    http_response_code(503);
+                    echo json_encode(array("message" => $pa->pari." est bloqué sur le système"));
+                    die();
+                }
+                if ($bouleBloquer->existe($pa->pari)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                    http_response_code(503);
+                    echo json_encode(array("message" => $pa->pari." est bloqué sur le système"));
+                    die();
+                }
+                $mlimite .= $this->getLimite($data->tirage,$pa, $pos,$data->id_vendeur);
+            }
+        }
+
+        if($mpbloquer!==""){
+            $mpbloquer="Imposible d'ajouter la fiche,les boules suivant sont bloqué par le système : ".$mpbloquer;
+            http_response_code(503);
+            echo json_encode(array("message" => $mpbloquer));
+            return;
+        }
+        if($mlimite!==""){
+            http_response_code(503);
+            echo json_encode(array("message" => $mlimite));
+            return;
+        }
+
+        $cjeux = true;
+        if ($cjeux === true) {
+            $paris = json_encode($data->paris);
+            $obj = new Vente();
+            $obj->remplire((array)$data);
+            $obj->setParis($paris);
+            $obj->setEliminer("non");
+            $obj->setDate(date("Y-m-d"));
+            $obj->setHeure(date("H:i:s"));
+            $obj->gain = 'non';
+            $obj->total_gain = '0';
+            $obj->payer = 'non';
+            $obj->tire='non';
+            $obj->id_pos = $pos->id;
+            $obj->id_branche=$vend->id_branche;
+            $b=new Branche();
+            $b=$b->findById($vend->id_branche);
+            $obj->id_superviseur=$b->id_supperviseur;
+            $m = $obj->add();
+            if ($m == "ok") {
+                $obj = $obj->lastObjet();
+                $obj->message = "Enregistrer avec success";
+                $obj = $obj->toJson();
+                http_response_code(200);
+                echo $obj;
+                return;
+            }
+            http_response_code(503);
+            echo json_encode(array("message" => $m));
+        } else {
+            goto cj;
+        }
+    }
+
+    private function traiteVenteTable($data){
+        $bouleBloquer=new BouleBloquer();
+        if (empty($data->paris) or count($data->paris) <= 0) {
+            cj:
+            http_response_code(503);
+            echo json_encode(array("message" => "liste pari introuvable pour cette vente"));
+            return;
+        }
+
+        if (empty($data->no_ticket)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no ticket invalide"));
+            return;
+        }
+
+        if (empty($data->id_client)) {
+            $cl = new Client();
+            $cl = $cl->getDefaultClient();
+            if ($cl != null) {
+                $data->id_client = $cl->getId();
+            } else {
+                $cl = new Client();
+                $cl->id = 1;
+                $cl->nom = "default";
+                $cl->prenom = "client";
+                $cl->sexe = "m";
+                $cl->telephone = "00000000";
+                $cl->pseudo = "defaultclient";
+                $cl->connect = "non";
+                $cl->objet = "client";
+                $m = $cl->add();
+                if ($m == "ok") {
+                    $data->id_client = 1;
+                } else {
+                    http_response_code(503);
+                    echo json_encode(array("message" => "id client invalide"));
+                    return;
+                }
+            }
+        }
+
+        if (!Client::existe($data->id_client)) {
+            http_response_code(404);
+            echo json_encode(array("message" => "client non trouver pour l'id : {$data->id_client}"));
+            return;
+        }
+
+        if (empty($data->id_vendeur)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "id vendeur invalide"));
+            return;
+        }
+
+        if (!Vendeur::existe($data->id_vendeur)) {
+            http_response_code(404);
+            echo json_encode(array("message" => "Vendeur non trouver pour l'id : {$data->id_vendeur}"));
+            return;
+        }
+
+        $agent=new Vendeur();
+        $agent=$agent->findById($data->id_vendeur);
+        $id_entreprise=$agent->id_entreprise;
+        $en=new Entreprise();
+        $en=$en->findById($id_entreprise);
+
+        if(!DefaultApp::isValide($en->date_expiration)){
+            http_response_code(503);
+            echo json_encode(array("message" => "Imposible d'ajouter la fiche, contacter votre fournisseur"));
+            return;
+        }
+
+        if (empty($data->ref_pos)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "ref pos invalide"));
+            return;
+        }
+
+        if (empty($data->tid)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "tid invalide"));
+            return;
+        }
+
+        if (empty($data->sequence)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no sequence invalide"));
+            return;
+        }
+
+        if (empty($data->serial)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "no serial invalide"));
+            return;
+        }
+
+        if (!Tirage::isTirageEncour($data->tirage,$id_entreprise)) {
+            http_response_code(503);
+            echo json_encode(array("message" => "Impossible d'ajouter le fiche , tirage fermé"));
+            return;
+        }
+
+        if (Tirage::isTirageEncour2($data->tirage,$id_entreprise)) {
+            http_response_code(503);
+            $ti=Tirage::rechercherParNom($data->tirage,$id_entreprise);
+            $ti->statut = "n/a";
+            $ti->update();
+            echo json_encode(array("message" => "Impossible d'ajouter la fiche , tirage fermé (2em verification)"));
+            return;
+        }
+
+
+
+        $pos = Pos::rechercherParImei($data->tid,$id_entreprise);
+        if ($pos->statut !== "actif") {
+            http_response_code(503);
+            echo json_encode(array("message" => "Impossible d'ajouter le fiche , pos desactiver par le systeme"));
+            return;
+        }
+
+        $mlimite="";
+        $mpbloquer="";
+        $bb=json_decode($pos->boule_bloquer);
+
+        if($bb==null) {
+            foreach ($data->paris as $pa) {
+                if ($bouleBloquer->existe($pa->pari,$id_entreprise)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                    http_response_code(503);
+                    echo json_encode(array("message" => $pa->pari." est bloqué sur le système"));
+                    die();
+                }
+                $mlimite .= $this->getLimite($data->tirage,$pa, $pos,$data->id_vendeur,$id_entreprise);
+            }
+        }else{
+            foreach ($data->paris as $pa) {
+                if ($bouleBloquer->existeFromTable($pa->pari,$bb)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                    http_response_code(503);
+                    echo json_encode(array("message" => $pa->pari." est bloqué sur le système"));
+                    die();
+                }
+                if ($bouleBloquer->existe($pa->pari,$id_entreprise)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                    http_response_code(503);
+                    echo json_encode(array("message" => $pa->pari." est bloqué sur le système"));
+                    die();
+                }
+
+                $mlimite .= $this->getLimite($data->tirage,$pa, $pos,$data->id_vendeur,$id_entreprise);
+            }
+        }
+
+        /*if($bb==null) {
+            foreach ($data->paris as $pa) {
+                if ($bouleBloquer->existe($pa->pari)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                }
+                $mlimite .= $this->getLimite($data->tirage,$pa, $pos,$data->id_vendeur);
+            }
+        }else{
+            foreach ($data->paris as $pa) {
+                if ($bouleBloquer->existeFromTable($pa->pari,$bb)) {
+                    $mpbloquer .= $pa->pari . " , ";
+                }
+                $mlimite .= $this->getLimite($data->tirage,$pa, $pos,$data->id_vendeur);
+            }
+        }*/
+
+        if($mpbloquer!=""){
+            $mpbloquer="Imposible d'ajouter la fiche,les boules suivant sont bloqué par le système : ".$mpbloquer;
+            http_response_code(503);
+            //echo json_encode(array("message" => $mpbloquer));
+            return $mpbloquer;
+        }
+
+        if($mlimite!=""){
+            http_response_code(503);
+            return $mlimite;
+        }
+
+        $cjeux = true;
+        if ($cjeux === true) {
+            $paris = json_encode($data->paris);
+            $obj = new Vente();
+            $obj->remplire((array)$data);
+            $obj->setParis($paris);
+            $obj->setEliminer("non");
+            $obj->setDate(date("Y-m-d"));
+            $obj->setHeure(date("H:i:s"));
+            $obj->gain = 'n/a';
+            $obj->total_gain = '0';
+            $obj->payer = 'n/a';
+            $obj->id_pos = $pos->id;
+            $obj->id_departemet = $pos->id_departement;
+            $obj->id_arrondissement = $pos->id_arrondisement;
+            $obj->id_commune = $pos->id_commune;
+            $obj->id_succursal = $pos->id_succursal;
+            $obj->id_entreprise=$id_entreprise;
+            $su = new Succursal();
+            $su = $su->findById($pos->id_succursal);
+            $obj->id_superviseur = $su->id_superviseur;
+            $m = $obj->add();
+            if ($m == "ok") {
+                $obj = $obj->lastObjet();
+                $obj->message = "Enregistrer avec success";
+                return $obj;
+            }
+            http_response_code(503);
+            echo json_encode(array("message" => $m));
+        } else {
+            goto cj;
+        }
+    }
+
     public function add()
     {
         try {
@@ -32,8 +550,45 @@ class VenteControlleur extends Controlleur
             header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
             $data = json_decode(file_get_contents("php://input"));
 
-            $bouleBloquer = new NumeroControler();
+            if(is_array($data)){
+                foreach ($data as $d){
+                    $obj=$this->traiteVenteTable($d);
+                    if(is_string($obj)){
+                        break;
+                    }
+                }
+                if(is_string($obj)){
+                    http_response_code(503);
+                    echo json_encode(array("message"=>$obj));
+                }else {
+                    $obj = $obj->toJson();
+                    http_response_code(200);
+                    echo $obj;
+                }
+            }else{
+                $this->traiteVente($data);
+            }
+        } catch (\Exception $ex) {
+            http_response_code(503);
+            echo json_encode(array("message" => $ex->getMessage()));
+        }
 
+    }
+
+
+    public function add1()
+    {
+        try {
+            header("Access-Control-Allow-Origin: *");
+            header("Content-Type: application/json; charset=UTF-8");
+            header("Access-Control-Allow-Methods: POST");
+            header("Access-Control-Max-Age: 3600");
+            header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+            $data = json_decode(file_get_contents("php://input"));
+
+            $bouleBloquer = new NumeroControler();
+            $con=NumeroControler::connection();
+            $con->beginTransaction();
             if (empty($data->paris) or count($data->paris) <= 0) {
                 cj:
                 http_response_code(503);
@@ -66,6 +621,7 @@ class VenteControlleur extends Controlleur
                     if ($m == "ok") {
                         $data->id_client = 1;
                     } else {
+                        $con->rollBack();
                         http_response_code(503);
                         echo json_encode(array("message" => "id client invalide"));
                         return;
@@ -79,16 +635,90 @@ class VenteControlleur extends Controlleur
                 return;
             }
 
+            if($data->id_client!=1){
+                $compteClient=new CompteClient();
+                $compteClient=$compteClient->rechercher($data->id_client);
+                if($compteClient==null){
+                    http_response_code(503);
+                    echo json_encode(array("message" => "Compte client introuvable"));
+                    return;
+                }
+
+                $balanceJeux=$compteClient->balance_jeux;
+                if($data->prix>$balanceJeux){
+                    http_response_code(503);
+                    echo json_encode(array("message" => "Balance jeux insufisant !! Recharger votre compte"));
+                    return;
+                }
+            }
+
             if (empty($data->id_vendeur)) {
                 http_response_code(503);
                 echo json_encode(array("message" => "id vendeur invalide"));
                 return;
             }
 
-            if (!Vendeur::existe($data->id_vendeur)) {
-                http_response_code(404);
-                echo json_encode(array("message" => "Vendeur non trouver pour l'id : {$data->id_vendeur}"));
-                return;
+
+            if($data->id_vendeur=="n/a"){
+                $vn = new Vendeur();
+                $vn = $vn->getDefaultVendeur();
+                if ($vn != null) {
+                    $data->id_vendeur = $vn->getId();
+                } else {
+                    $br=new Branche();
+                    $br=$br->getDefaultBranche();
+                    if($br==null){
+                        $id_branche=1;
+                        $sup=new Utilisateur();
+                        $sup=$sup->getDefaultSuperviseur();
+                        if($sup==null){
+                            $id_supperviseur=1;
+                            $su=new Utilisateur();
+                            $su->id=$id_supperviseur;
+                            $su->nom="default";
+                            $su->prenom="superviseur";
+                            $su->pseudo="default";
+                            $su->password=md5("default");
+                            $su->role="superviseur";
+                            $su->objet="utilisateur";
+                            $su->ajouter();
+                        }else{
+                            $id_supperviseur=$sup->id;
+                        }
+                        $b=new Branche();
+                        $b->id=$id_branche;
+                        $b->id_supperviseur=$id_supperviseur;
+                        $b->branche="client";
+                        $b->ajouter();
+                    }else{
+                        $id_branche=$br->id;
+                    }
+                    $clv = new Vendeur();
+                    $clv->id_branche=$id_branche;
+                    $clv->nom = "default";
+                    $clv->prenom = "vendeur";
+                    $clv->sexe = "m";
+                    $clv->telephone = "00000000";
+                    $clv->pseudo = "defaultvendeur";
+                    $clv->connect = "non";
+                    $clv->objet = "vendeur";
+                    $mv = $clv->add();
+                    if ($mv == "ok") {
+                        $data->id_vendeur = $clv->lastId();
+                    } else {
+                        $con->rollBack();
+                        http_response_code(503);
+                        echo json_encode(array("message" => "id vendeur invalide"));
+                        return;
+                    }
+                }
+            }else {
+                if (!Vendeur::existe($data->id_vendeur)) {
+                    $con->rollBack();
+                    http_response_code(404);
+                    echo json_encode(array("message" => "Vendeur non trouver pour l'id : {$data->id_vendeur}"));
+                    return;
+                }
             }
 
             if (empty($data->ref_pos)) {
@@ -121,6 +751,7 @@ class VenteControlleur extends Controlleur
                 return;
             }
 
+
             $vend = new Vendeur();
             $vend = $vend->findById($data->id_vendeur);
 
@@ -143,6 +774,7 @@ class VenteControlleur extends Controlleur
                 echo json_encode(array("message" => $mplimite));
                 return;
             }
+
             $pos = Pos::rechercherParImei($data->tid);
             if ($pos->statut !== "actif") {
                 http_response_code(503);
@@ -150,8 +782,6 @@ class VenteControlleur extends Controlleur
                 return;
             }
 
-            $cjeux = true;
-            if ($cjeux === true) {
                 $paris = json_encode($data->paris);
                 $obj = new Vente();
                 $obj->remplire((array)$data);
@@ -160,17 +790,18 @@ class VenteControlleur extends Controlleur
                 $obj->setEliminer("non");
                 $obj->setDate(date("Y-m-d"));
                 $obj->setHeure(date("H:i:s"));
-                $obj->gain = 'n/a';
+                $obj->gain = 'non';
                 $obj->total_gain = '0';
-                $obj->payer = 'n/a';
+                $obj->payer = 'non';
+                $obj->tire='non';
                 $obj->id_pos = $pos->id;
                 $obj->id_branche=$vend->id_branche;
-
                 $b=new Branche();
                 $b=$b->findById($vend->id_branche);
                 $obj->id_superviseur=$b->id_supperviseur;
                 $m = $obj->add();
                 if ($m == "ok") {
+                    $con->commit();
                     $obj = $obj->lastObjet();
                     $obj->message = "Enregistrer avec success";
                     $obj = $obj->toJson();
@@ -178,12 +809,12 @@ class VenteControlleur extends Controlleur
                     echo $obj;
                     return;
                 }
+                $con->rollBack();
                 http_response_code(503);
                 echo json_encode(array("message" => $m));
-            } else {
-                goto cj;
-            }
+
         } catch (\Exception $ex) {
+            $con->rollBack();
             http_response_code(503);
             echo json_encode(array("message" => $ex->getMessage()));
         }
@@ -338,34 +969,38 @@ class VenteControlleur extends Controlleur
         header("Content-Type: application/json; charset=UTF-8");
 
         $obj = new Vente();
-        if (isset($_GET['id_vendeur'])) {
-            $id_vendeur = $_GET['id_vendeur'];
-            if (isset($_GET['eliminer'])) {
-                $liste = $obj->listeEliminer($id_vendeur);
-            } elseif (isset($_GET['non_eliminer'])) {
-                if (isset($_GET['date1']) and isset($_GET['date2'])) {
-                    $liste = $obj->listeNonEliminer($id_vendeur, $_GET['date1'], $_GET['date2']);
+        if(isset($_GET['id_client'])){
+            $liste=$obj->listerparClient($_GET['id_client']);
+        }else {
+            if (isset($_GET['id_vendeur'])) {
+                $id_vendeur = $_GET['id_vendeur'];
+                if (isset($_GET['eliminer'])) {
+                    $liste = $obj->listeEliminer($id_vendeur);
+                } elseif (isset($_GET['non_eliminer'])) {
+                    if (isset($_GET['date1']) and isset($_GET['date2'])) {
+                        $liste = $obj->listeNonEliminer($id_vendeur, $_GET['date1'], $_GET['date2']);
+                    } else {
+                        $liste = $obj->listeNonEliminer($id_vendeur);
+                    }
+                } elseif (isset($_GET['demmande_elimination'])) {
+                    $liste = $obj->listeDemmandeElimination($id_vendeur);
                 } else {
-                    $liste = $obj->listeNonEliminer($id_vendeur);
+                    $liste = $obj->findAll($id_vendeur);
                 }
-            } elseif (isset($_GET['demmande_elimination'])) {
-                $liste = $obj->listeDemmandeElimination($id_vendeur);
             } else {
-                $liste = $obj->findAll($id_vendeur);
-            }
-        } else {
-            if (isset($_GET['eliminer'])) {
-                $liste = $obj->listeEliminer();
-            } elseif (isset($_GET['non_eliminer'])) {
-                if(isset($_GET['date1']) and isset($_GET['date2'])){
-                    $liste=$obj->listeNonEliminer("",$_GET['date1'],$_GET['date1']);
-                }else {
-                    $liste = $obj->listeNonEliminer();
+                if (isset($_GET['eliminer'])) {
+                    $liste = $obj->listeEliminer();
+                } elseif (isset($_GET['non_eliminer'])) {
+                    if (isset($_GET['date1']) and isset($_GET['date2'])) {
+                        $liste = $obj->listeNonEliminer("", $_GET['date1'], $_GET['date1']);
+                    } else {
+                        $liste = $obj->listeNonEliminer();
+                    }
+                } elseif (isset($_GET['demmande_elimination'])) {
+                    $liste = $obj->listeDemmandeElimination();
+                } else {
+                    $liste = $obj->findAll();
                 }
-            } elseif (isset($_GET['demmande_elimination'])) {
-                $liste = $obj->listeDemmandeElimination();
-            } else {
-                $liste = $obj->findAll();
             }
         }
 

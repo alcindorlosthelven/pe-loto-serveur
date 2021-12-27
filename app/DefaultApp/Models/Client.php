@@ -208,13 +208,30 @@ class Client extends Model
                 ":pseudo" => $user_name,
                 ":password" => $password
             ));
-            $data = $stmt->fetchAll(\PDO::FETCH_CLASS, __CLASS__);
+            $data = $stmt->fetchAll(\PDO::FETCH_OBJ);
             if (count($data) > 0) {
-                self::setConnection($data[0]->getId());
-                $data[0]->setConnect("oui");
-                return $data[0];
+                self::setConnection($data[0]->id);
+                $compte=new CompteClient();
+                $compte=$compte->rechercher($data[0]->id);
+                if($compte!=null){
+                    $transactions=ClientCompteTransaction::listeByCompte($compte->id);
+                    $compte->transactions=$transactions;
+                }
+                $data[0]->connect='oui';
+                $data[0]->statut="ok";
+                $data[0]->compte=$compte;
+                return
+                    array(
+                        "result" =>$data[0],
+                        "message" => "Email ou mot de passe incorrect",
+                        "statut" => "ok"
+                    );
             } else {
-                return "no";
+                return
+                    array(
+                        "message" => "Email ou mot de passe incorrect",
+                        "statut" => "no"
+                    );
             }
         } catch (\Exception $ex) {
             throw new \Exception($ex->getMessage());
@@ -252,5 +269,14 @@ class Client extends Model
             return "ok";
         }
         return "no";
+    }
+
+    public function findAll()
+    {
+        $con=self::connection();
+        $req="select *from client where nom<>'default' and prenom<>'client'";
+        $stmt=$con->prepare($req);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_CLASS,__CLASS__);
     }
 }

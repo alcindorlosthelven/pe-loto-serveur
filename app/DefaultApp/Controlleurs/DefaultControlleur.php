@@ -48,9 +48,9 @@ class DefaultControlleur extends Controlleur
         }
 
         $msg = Client::login($data->user_name, $data->password);
-        if ($msg == "no") {
+        if ($msg['statut'] == "no") {
             $msg_1 = Vendeur::login($data->user_name, $data->password);
-            if ($msg_1 == "no") {
+            if ($msg_1['statut'] == "no") {
                 $msg_2 = Utilisateur::login($data->user_name, $data->password);
                 if ($msg_2 == "no") {
                     http_response_code(404);
@@ -61,11 +61,11 @@ class DefaultControlleur extends Controlleur
                 }
             } else {
                 http_response_code(200);
-                echo json_encode($msg_1);
+                echo json_encode($msg_1['result']);
             }
         } else {
             http_response_code(200);
-            echo json_encode($msg);
+            echo json_encode($msg['result']);
         }
 
     }

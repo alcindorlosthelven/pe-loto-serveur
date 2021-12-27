@@ -8,7 +8,7 @@ use systeme\Model\Model;
 
 class Pos extends Model
 {
-    public $id, $imei, $longitude, $latitude, $statut;
+    public $id, $imei, $longitude, $latitude, $statut,$prime,$limite,$boule_bloquer;
 
     public function rechercherParVendeur($idvendeur)
     {
